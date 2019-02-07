@@ -11,7 +11,7 @@ namespace Maverick.Json
 
         public static String Serialize<T>( T value, JsonFormat? format = null, JsonSettings settings = null )
         {
-            using ( var buffer = new BufferWriter( BufferSize ) )
+            using ( var buffer = new JsonBufferWriter( BufferSize ) )
             {
                 var writer = new JsonWriter( buffer, settings ?? JsonSettings.Default );
 
@@ -29,7 +29,7 @@ namespace Maverick.Json
 
         public static void Serialize<T>( Stream stream, T value, JsonFormat? format = null, JsonSettings settings = null )
         {
-            using ( var buffer = new BufferStreamWriter( stream, BufferSize ) )
+            using ( var buffer = new JsonStreamWriter( stream, BufferSize ) )
             {
                 var writer = new JsonWriter( buffer, settings ?? JsonSettings.Default );
 
@@ -45,7 +45,7 @@ namespace Maverick.Json
 
         public static T Deserialize<T>( String json, JsonSettings settings = null )
         {
-            using ( var buffer = new BufferWriter( BufferSize ) )
+            using ( var buffer = new JsonBufferWriter( BufferSize ) )
             {
                 buffer.WriteString( json, Constants.Encoding );
                 var reader = new JsonReader( buffer.ToSequence(), settings ?? JsonSettings.Default );
@@ -68,7 +68,7 @@ namespace Maverick.Json
 
         public static Object Deserialize( String json, Type objectType, JsonSettings settings = null )
         {
-            using ( var buffer = new BufferWriter( BufferSize ) )
+            using ( var buffer = new JsonBufferWriter( BufferSize ) )
             {
                 buffer.WriteString( json, Constants.Encoding );
                 var reader = new JsonReader( buffer.ToSequence(), settings ?? JsonSettings.Default );
@@ -83,7 +83,7 @@ namespace Maverick.Json
 
         public static void Populate( String json, Object target, JsonSettings settings = null )
         {
-            using ( var buffer = new BufferWriter( BufferSize ) )
+            using ( var buffer = new JsonBufferWriter( BufferSize ) )
             {
                 buffer.WriteString( json, Constants.Encoding );
                 var reader = new JsonReader( buffer.ToSequence(), settings ?? JsonSettings.Default );

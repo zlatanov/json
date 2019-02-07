@@ -4,14 +4,19 @@ using System.IO;
 
 namespace Maverick.Json
 {
-    internal sealed class BufferStreamWriter : IBufferWriter<Byte>, IDisposable
+    public sealed class JsonStreamWriter : IBufferWriter<Byte>, IDisposable
     {
-        public BufferStreamWriter( Stream stream, Int32 bufferSize ) : this( stream, bufferSize, ArrayPool<Byte>.Shared )
+        public JsonStreamWriter( Stream stream ) : this( stream, 4096, ArrayPool<Byte>.Shared )
         {
         }
 
 
-        public BufferStreamWriter( Stream stream, Int32 bufferSize, ArrayPool<Byte> arrayPool )
+        public JsonStreamWriter( Stream stream, Int32 bufferSize ) : this( stream, bufferSize, ArrayPool<Byte>.Shared )
+        {
+        }
+
+
+        public JsonStreamWriter( Stream stream, Int32 bufferSize, ArrayPool<Byte> arrayPool )
         {
             m_arrayPool = arrayPool ?? throw new ArgumentNullException( nameof( arrayPool ) );
             m_stream = stream ?? throw new ArgumentNullException( nameof( stream ) );
@@ -76,7 +81,6 @@ namespace Maverick.Json
 
 
         public Span<Byte> GetSpan( Int32 sizeHint ) => GetMemory( sizeHint ).Span;
-
 
 
         private readonly ArrayPool<Byte> m_arrayPool;

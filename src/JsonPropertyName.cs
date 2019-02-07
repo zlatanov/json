@@ -95,7 +95,7 @@ namespace Maverick.Json
                     throw new NotImplementedException( $"Naming strategy {strategy} is not implemented." );
             }
 
-            using ( var buffer = new BufferWriter( 256 ) )
+            using ( var buffer = new JsonBufferWriter( 256 ) )
             {
                 new JsonWriter( buffer ).WriteValue( data.Value );
 

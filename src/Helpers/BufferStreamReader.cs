@@ -15,7 +15,7 @@ namespace Maverick.Json
 
         public BufferStreamReader( Int32 blockSize, ArrayPool<Byte> arrayPool )
         {
-            m_buffer = new BufferWriter( blockSize, arrayPool );
+            m_buffer = new JsonBufferWriter( blockSize, arrayPool );
         }
 
 
@@ -43,6 +43,6 @@ namespace Maverick.Json
         public void Dispose() => m_buffer.Dispose();
 
 
-        private readonly BufferWriter m_buffer;
+        private readonly JsonBufferWriter m_buffer;
     }
 }

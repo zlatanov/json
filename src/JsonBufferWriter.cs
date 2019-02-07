@@ -3,17 +3,23 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Maverick.Json
 {
-    internal sealed class BufferWriter : IBufferWriter<Byte>, IDisposable
+    public sealed class JsonBufferWriter : IBufferWriter<Byte>, IDisposable
     {
-        public BufferWriter( Int32 bufferSize ) : this( bufferSize, ArrayPool<Byte>.Shared )
+        public JsonBufferWriter() : this( 4096, ArrayPool<Byte>.Shared )
         {
         }
 
 
-        public BufferWriter( Int32 bufferSize, ArrayPool<Byte> arrayPool )
+        public JsonBufferWriter( Int32 bufferSize ) : this( bufferSize, ArrayPool<Byte>.Shared )
+        {
+        }
+
+
+        public JsonBufferWriter( Int32 bufferSize, ArrayPool<Byte> arrayPool )
         {
             m_arrayPool = arrayPool ?? throw new ArgumentNullException( nameof( arrayPool ) );
             m_current = arrayPool.Rent( bufferSize );
@@ -101,7 +107,7 @@ namespace Maverick.Json
         }
 
 
-        internal void CopyTo( Stream stream )
+        public void CopyTo( Stream stream )
         {
             foreach ( var segment in m_segments )
             {
@@ -111,6 +117,20 @@ namespace Maverick.Json
             if ( m_offset > 0 )
             {
                 stream.Write( m_current, 0, m_offset );
+            }
+        }
+
+
+        public async Task CopyToAsync( Stream stream )
+        {
+            foreach ( var segment in m_segments )
+            {
+                await stream.WriteAsync( segment.Buffer, 0, segment.Count );
+            }
+
+            if ( m_offset > 0 )
+            {
+                await stream.WriteAsync( m_current, 0, m_offset );
             }
         }
 
