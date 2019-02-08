@@ -380,15 +380,34 @@ namespace Maverick.Json
         {
             WriteStarted( State.Value );
 
-            // Do not serialize trailing zeroes. The current version of the Utf8Formatter we use
-            // do not allow us to specify that we don't want any.
-            // https://stackoverflow.com/a/7983330/132690
-            value /= 1.0000000000000000000000000000M;
+            var span = m_output.GetSpan( Constants.MaxDecimalSize );
 
-            if ( !Utf8Formatter.TryFormat( value, m_output.GetSpan(), out var bytesWritten ) &&
-                 !Utf8Formatter.TryFormat( value, m_output.GetSpan( Constants.MaxDecimalSize ), out bytesWritten ) )
+            if ( !Utf8Formatter.TryFormat( value, span, out var bytesWritten ) )
             {
                 ThrowFormatException( value );
+            }
+
+            // Do not serialize trailing zeroes. The current version of the Utf8Formatter we use
+            // do not allow us to specify that we don't want any.
+            if ( span[ bytesWritten - 1 ] == (Byte)'0' )
+            {
+                // Find out if the decimal has a decimal point
+                var pointIndex = span.LastIndexOf( (Byte)'.' );
+
+                if ( pointIndex != -1 )
+                {
+                    --bytesWritten;
+
+                    while ( span[ bytesWritten - 1 ] == (Byte)'0' )
+                    {
+                        --bytesWritten;
+                    }
+
+                    if ( bytesWritten - 1 == pointIndex )
+                    {
+                        --bytesWritten;
+                    }
+                }
             }
 
             m_output.Advance( bytesWritten );
