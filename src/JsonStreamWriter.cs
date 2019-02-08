@@ -56,7 +56,7 @@ namespace Maverick.Json
 
         public Memory<Byte> GetMemory( Int32 sizeHint )
         {
-            Retry:
+        Retry:
             if ( sizeHint > m_available || m_available == 0 )
             {
                 if ( m_offset > 0 )
@@ -80,7 +80,30 @@ namespace Maverick.Json
         }
 
 
-        public Span<Byte> GetSpan( Int32 sizeHint ) => GetMemory( sizeHint ).Span;
+        public Span<Byte> GetSpan( Int32 sizeHint )
+        {
+        Retry:
+            if ( sizeHint > m_available || m_available == 0 )
+            {
+                if ( m_offset > 0 )
+                {
+                    // Copy the current buffer to the stream
+                    m_stream.Write( m_buffer, 0, m_offset );
+                    m_available = m_buffer.Length;
+                    m_offset = 0;
+
+                    goto Retry;
+                }
+
+                // The current buffer is too small
+                m_arrayPool.Return( m_buffer );
+
+                m_buffer = m_arrayPool.Rent( sizeHint );
+                m_available = m_buffer.Length;
+            }
+
+            return m_buffer.AsSpan( m_offset );
+        }
 
 
         private readonly ArrayPool<Byte> m_arrayPool;
