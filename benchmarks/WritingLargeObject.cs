@@ -18,7 +18,7 @@ namespace Maverick.Json.Benchmarks
         [GlobalSetup]
         public void Setup()
         {
-            Objects = Enumerable.Range( 0, 10000 ).Select( x => LargeObject.Create() ).ToList();
+            Objects = Enumerable.Range( 0, 100000 ).Select( x => LargeObject.Create() ).ToList();
         }
 
 
