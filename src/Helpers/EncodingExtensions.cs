@@ -70,6 +70,11 @@ namespace Maverick.Json
 
         public static unsafe String GetString( this Encoding encoding, ReadOnlySpan<Byte> bytes )
         {
+            if ( bytes.Length == 0 )
+            {
+                return String.Empty;
+            }
+
             fixed ( Byte* fixedBytes = bytes )
             {
                 return encoding.GetString( fixedBytes, bytes.Length );

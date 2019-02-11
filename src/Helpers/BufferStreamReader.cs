@@ -19,7 +19,7 @@ namespace Maverick.Json
         }
 
 
-        public ReadOnlySequence<Byte> Sequence => m_buffer.ToSequence();
+        public ReadOnlySequence<Byte> Sequence => m_buffer.Sequence;
 
 
         public async Task ReadAsync( Stream stream )

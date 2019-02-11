@@ -22,7 +22,7 @@ namespace Maverick.Json
 
                 writer.WriteValue( value );
 
-                return Constants.Encoding.GetString( buffer.ToSequence() );
+                return Constants.Encoding.GetString( buffer.Sequence );
             }
         }
 
@@ -47,8 +47,8 @@ namespace Maverick.Json
         {
             using ( var buffer = new JsonBufferWriter( BufferSize ) )
             {
-                buffer.WriteString( json, Constants.Encoding );
-                var reader = new JsonReader( buffer.ToSequence(), settings ?? JsonSettings.Default );
+                buffer.Write( json );
+                var reader = new JsonReader( buffer.Sequence, settings ?? JsonSettings.Default );
 
                 return reader.ReadValue<T>();
             }
@@ -70,8 +70,8 @@ namespace Maverick.Json
         {
             using ( var buffer = new JsonBufferWriter( BufferSize ) )
             {
-                buffer.WriteString( json, Constants.Encoding );
-                var reader = new JsonReader( buffer.ToSequence(), settings ?? JsonSettings.Default );
+                buffer.Write( json );
+                var reader = new JsonReader( buffer.Sequence, settings ?? JsonSettings.Default );
 
                 return reader.ReadValue( objectType );
             }
@@ -85,8 +85,8 @@ namespace Maverick.Json
         {
             using ( var buffer = new JsonBufferWriter( BufferSize ) )
             {
-                buffer.WriteString( json, Constants.Encoding );
-                var reader = new JsonReader( buffer.ToSequence(), settings ?? JsonSettings.Default );
+                buffer.Write( json );
+                var reader = new JsonReader( buffer.Sequence, settings ?? JsonSettings.Default );
 
                 reader.Populate( target );
             }
