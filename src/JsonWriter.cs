@@ -392,7 +392,7 @@ namespace Maverick.Json
             if ( span[ bytesWritten - 1 ] == (Byte)'0' )
             {
                 // Find out if the decimal has a decimal point
-                var pointIndex = span.LastIndexOf( (Byte)'.' );
+                var pointIndex = span.Slice( 0, bytesWritten ).LastIndexOf( (Byte)'.' );
 
                 if ( pointIndex != -1 )
                 {
