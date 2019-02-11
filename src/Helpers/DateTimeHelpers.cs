@@ -389,9 +389,7 @@ namespace Maverick.Json
                 offsetMinutes = -offsetMinutes;
             }
             var timeSpan = new TimeSpan( offsetHours, offsetMinutes, 0 );
-            value = timeSpan == TimeSpan.Zero
-                ? new Date( year, month, day, hour, minute, second, fraction, DateTimeKind.Utc, timeSpan )
-                : new Date( year, month, day, hour, minute, second, fraction, DateTimeKind.Local, timeSpan );
+            value = new Date( year, month, day, hour, minute, second, fraction, DateTimeKind.Local, timeSpan );
 
             bytesConsumed = currentOffset;
             return true;
