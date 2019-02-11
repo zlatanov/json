@@ -1,6 +1,8 @@
-# json
-A fully featured UTF-8 Json serializer.
+A fully featured, non allocating UTF-8 Json serializer.
+========================================
+[![Build Status](https://dev.azure.com/zlatanov/GitHub%20Open%20Source/_apis/build/status/zlatanov.json?branchName=master)](https://dev.azure.com/zlatanov/GitHub%20Open%20Source/_build/latest?definitionId=1&branchName=master)
 
+#### Example
 ```c#
 var settings = new JsonSettings
 {
