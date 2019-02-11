@@ -574,7 +574,7 @@ namespace Maverick.Json
                     var buffer = m_output.GetSpan( 6 );
 
                     digits = Constants.TwoDigitsBytes[ Math.Abs( offset.Hours ) ];
-                    buffer[ 0 ] = offset > TimeSpan.Zero ? (Byte)'+' : (Byte)'-';
+                    buffer[ 0 ] = offset >= TimeSpan.Zero ? (Byte)'+' : (Byte)'-';
                     buffer[ 1 ] = digits.First;
                     buffer[ 2 ] = digits.Second;
                     buffer[ 3 ] = (Byte)':';
