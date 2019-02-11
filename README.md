@@ -1,6 +1,6 @@
 A fully featured, non allocating UTF-8 Json serializer.
 ========================================
-[![Build Status](https://dev.azure.com/zlatanov/GitHub%20Open%20Source/_apis/build/status/zlatanov.json?branchName=master)](https://dev.azure.com/zlatanov/GitHub%20Open%20Source/_build/latest?definitionId=1&branchName=master)
+[![Build Status](https://dev.azure.com/zlatanov/github-open-source/_apis/build/status/zlatanov.json?branchName=master)](https://dev.azure.com/zlatanov/github-open-source/_build/latest?definitionId=1&branchName=master)
 
 #### Example
 ```c#
