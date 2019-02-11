@@ -1,0 +1,49 @@
+trigger:
+- master
+- release/*
+
+# Run PR validation on all branches
+pr:
+  autoCancel: true
+  branches:
+    include:
+    - master
+    - release/*
+
+strategy:
+  matrix:
+    linux:
+      imageName: 'ubuntu-16.04'
+    mac:
+      imageName: 'macos-10.13'
+    windows:
+      imageName: 'vs2017-win2016'
+
+pool:
+  vmImage: $(imageName)
+
+variables:
+  Configuration: 'Release'
+
+steps:
+- task: DotNetCoreInstaller@0
+  inputs:
+    version: '2.2.101'
+
+- task: DotNetCoreCLI@1
+  inputs:
+    command: restore
+    projects: '**/*.csproj'
+
+- script: | 
+    dotnet build --configuration $(Configuration)
+    dotnet test tests --configuration $(Configuration) --logger trx
+    dotnet publish src --configuration $(Configuration) --output $BUILD_ARTIFACTSTAGINGDIRECTORY
+
+- task: PublishTestResults@2
+  condition: succeededOrFailed()
+  inputs:
+    testRunner: VSTest
+    testResultsFiles: '**/*.trx'
+
+- task: PublishBuildArtifacts@1
