@@ -4,20 +4,28 @@
         <Description>Provides standards-based support for the serialization of JSON.</Description>
         <Version>1.0</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+        <PackageVersion>1.0</PackageVersion>
+        <PackageProjectUrl>https://github.com/zlatanov/json</PackageProjectUrl>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageTags>json</PackageTags>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
     </PropertyGroup>
+    
     <ItemGroup>
         <PackageReference Include="System.Buffers" Version="4.5.0" />
-        <PackageReference Include="System.Memory" Version="4.5.1" />
+        <PackageReference Include="System.Memory" Version="4.5.2" />
         <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
-        <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.1" />
+        <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.2" />
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta-63127-02" PrivateAssets="All" />
     </ItemGroup>
+    
     <ItemGroup>
         <None Update="Helpers\ObjectConstructor.Variants.tt">
             <Generator>TextTemplatingFileGenerator</Generator>
             <LastGenOutput>ObjectConstructor.Variants.cs</LastGenOutput>
         </None>
-    </ItemGroup>
-    <ItemGroup>
+
         <Compile Update="Helpers\ObjectConstructor.Variants.cs">
             <DesignTime>True</DesignTime>
             <AutoGen>True</AutoGen>

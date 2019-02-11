@@ -10,9 +10,13 @@
 
         <!--Deterministic Build (tm)-->
         <Deterministic>true</Deterministic>
+        <PathMap>$(MSBuildThisFileDirectory)=Z:\Projects\Json\</PathMap>
         
         <!--Embedded Debug Symbols-->
         <DebugType Condition="$(Configuration) == Release">embedded</DebugType>
         <DebugSymbols>True</DebugSymbols>
+
+        <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)Maverick.Json.snk</AssemblyOriginatorKeyFile>
+        <SignAssembly>true</SignAssembly>
     </PropertyGroup>
 </Project>
