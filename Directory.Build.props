@@ -3,7 +3,9 @@
         <NoWarn>$(NoWarn);1591</NoWarn>
 
         <Authors>Ivan Zlatanov</Authors>
+        <NeutralLanguage>en-US</NeutralLanguage>
         <LangVersion>latest</LangVersion>
+        <Features>strict</Features>
 
         <GenerateDocumentationFile Condition="$(Configuration) == Release">true</GenerateDocumentationFile>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
