@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Maverick.Json.Serialization
 {
@@ -7,19 +8,16 @@ namespace Maverick.Json.Serialization
         public JsonNameTable( JsonNamingStrategy namingStrategy )
         {
             m_namingStrategy = namingStrategy;
-            m_entries = new Entry[ m_mask + 1 ];
         }
 
 
-        public JsonProperty<TOwner> Find( ReadOnlySpan<Byte> bytes )
+        public unsafe JsonProperty<TOwner> Find( ReadOnlySpan<Byte> bytes )
         {
-            var hashCode = JsonNameTable.ComputeHash( bytes );
-
-            for ( var entry = m_entries[ hashCode & m_mask ]; entry != null; entry = entry.Next )
+            fixed ( Byte* fixedBytes = bytes )
             {
-                if ( entry.HashCode == hashCode && bytes.SequenceEqual( entry.ValueBytes ) )
+                if ( m_properties.TryGetValue( new JsonNameKey( fixedBytes, bytes.Length ), out var value ) )
                 {
-                    return entry.Property;
+                    return value;
                 }
             }
 
@@ -38,50 +36,12 @@ namespace Maverick.Json.Serialization
                 return;
             }
 
-            var hashCode = JsonNameTable.ComputeHash( bytes );
-            var index = hashCode & m_mask;
-            var entry = new Entry( property, bytes.ToArray(), hashCode, m_entries[ index ] );
-
-            m_entries[ index ] = entry;
-
-            if ( m_count++ == m_mask )
-            {
-                Grow();
-            }
-        }
-
-
-        private void Grow()
-        {
-            var entries = m_entries;
-            var newMask = ( m_mask * 2 ) + 1;
-            var newEntries = new Entry[ newMask + 1 ];
-
-            for ( var i = 0; i < entries.Length; i++ )
-            {
-                Entry next;
-
-                for ( var entry = entries[ i ]; entry != null; entry = next )
-                {
-                    var index = entry.HashCode & newMask;
-
-                    next = entry.Next;
-                    entry.Next = newEntries[ index ];
-
-                    newEntries[ index ] = entry;
-                }
-            }
-
-            m_entries = newEntries;
-            m_mask = newMask;
+            m_properties.Add( new JsonNameKey( bytes.ToArray() ), property );
         }
 
 
         private readonly JsonNamingStrategy m_namingStrategy;
-
-        private Int32 m_count;
-        private Entry[] m_entries;
-        private Int32 m_mask = 31;
+        private readonly Dictionary<JsonNameKey, JsonProperty<TOwner>> m_properties = new Dictionary<JsonNameKey, JsonProperty<TOwner>>();
 
 
         private sealed class Entry
