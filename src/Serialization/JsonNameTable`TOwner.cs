@@ -11,17 +11,19 @@ namespace Maverick.Json.Serialization
         }
 
 
-        public unsafe JsonProperty<TOwner> Find( ReadOnlySpan<Byte> bytes )
+        public JsonProperty<TOwner> Find( ReadOnlyMemory<Byte> bytes )
         {
-            fixed ( Byte* fixedBytes = bytes )
-            {
-                if ( m_properties.TryGetValue( new JsonNameKey( fixedBytes, bytes.Length ), out var value ) )
-                {
-                    return value;
-                }
-            }
+            m_properties.TryGetValue( new JsonNameKey( bytes ), out var value );
 
-            return null;
+            return value;
+        }
+
+
+        public unsafe JsonProperty<TOwner> Find( Byte* bytes, Int32 length )
+        {
+            m_properties.TryGetValue( new JsonNameKey( bytes, length ), out var value );
+
+            return value;
         }
 
 
@@ -36,32 +38,11 @@ namespace Maverick.Json.Serialization
                 return;
             }
 
-            m_properties.Add( new JsonNameKey( bytes.ToArray() ), property );
+            m_properties.Add( new JsonNameKey( bytes ), property );
         }
 
 
         private readonly JsonNamingStrategy m_namingStrategy;
         private readonly Dictionary<JsonNameKey, JsonProperty<TOwner>> m_properties = new Dictionary<JsonNameKey, JsonProperty<TOwner>>();
-
-
-        private sealed class Entry
-        {
-            public Entry( JsonProperty<TOwner> value, Byte[] bytes, Int32 hashCode, Entry next )
-            {
-                Property = value;
-                ValueBytes = bytes;
-                HashCode = hashCode;
-                Next = next;
-            }
-
-
-            public JsonProperty<TOwner> Property { get; }
-            public Byte[] ValueBytes { get; }
-            public Int32 HashCode { get; }
-            public Entry Next { get; set; }
-
-
-            public override String ToString() => Property.Name.Value;
-        }
     }
 }

@@ -25,11 +25,11 @@ namespace Maverick.Json
         internal ReadOnlySpan<Byte> GetBytes( JsonNamingStrategy strategy ) => m_data[ (Byte)strategy ].ValueBytes;
 
 
-        internal ReadOnlySpan<Byte> GetBytesNoQuotes( JsonNamingStrategy strategy )
+        internal ReadOnlyMemory<Byte> GetBytesNoQuotes( JsonNamingStrategy strategy )
         {
             var bytes = m_data[ (Byte)strategy ].ValueBytes;
 
-            return new ReadOnlySpan<Byte>( bytes, 1, bytes.Length - 3 );
+            return new ReadOnlyMemory<Byte>( bytes, 1, bytes.Length - 3 );
         }
 
 
