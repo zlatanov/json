@@ -158,7 +158,7 @@ namespace Maverick.Json
         }
 
 
-        public String ReadPropertyName()
+        public unsafe String ReadPropertyName()
         {
             CheckToken( JsonToken.PropertyName );
 
@@ -174,14 +174,14 @@ namespace Maverick.Json
 
                 if ( continuous )
                 {
-                    propertyName = ReadPropertyName( GetSpan( byteCount ), escapeByteCount );
+                    propertyName = ReadPropertyName( m_memory.Slice( 0, byteCount ), escapeByteCount );
                 }
                 else
                 {
-                    Span<Byte> bytes = stackalloc Byte[ byteCount ];
-                    CopySpan( bytes );
+                    var bytes = stackalloc Byte[ byteCount ];
+                    CopySpan( new Span<Byte>( bytes, byteCount ) );
 
-                    propertyName = ReadPropertyName( bytes, escapeByteCount );
+                    propertyName = ReadPropertyName( bytes, byteCount, escapeByteCount );
                 }
             }
 
@@ -191,13 +191,13 @@ namespace Maverick.Json
         }
 
 
-        private String ReadPropertyName( ReadOnlySpan<Byte> buffer, Int32 escapeByteCount )
+        private String ReadPropertyName( ReadOnlyMemory<Byte> buffer, Int32 escapeByteCount )
         {
             var propertyName = m_nameTable.Find( buffer );
 
             if ( propertyName == null )
             {
-                propertyName = JsonPropertyName.RestoreCase( UnescapeString( buffer, escapeByteCount ), Settings.NamingStrategy );
+                propertyName = JsonPropertyName.RestoreCase( UnescapeString( buffer.Span, escapeByteCount ), Settings.NamingStrategy );
                 m_nameTable.Add( buffer, propertyName );
             }
 
@@ -205,7 +205,23 @@ namespace Maverick.Json
         }
 
 
-        public JsonProperty<TOwner> ReadPropertyName<TOwner>( JsonPropertyCollection<TOwner> properties )
+        private unsafe String ReadPropertyName( Byte* buffer, Int32 length, Int32 escapeByteCount )
+        {
+            var propertyName = m_nameTable.Find( buffer, length );
+
+            if ( propertyName == null )
+            {
+                var span = new Span<Byte>( buffer, length );
+
+                propertyName = JsonPropertyName.RestoreCase( UnescapeString( span, escapeByteCount ), Settings.NamingStrategy );
+                m_nameTable.Add( new ReadOnlyMemory<Byte>( span.ToArray() ), propertyName );
+            }
+
+            return propertyName;
+        }
+
+
+        public unsafe JsonProperty<TOwner> ReadPropertyName<TOwner>( JsonPropertyCollection<TOwner> properties )
         {
             CheckToken( JsonToken.PropertyName );
 
@@ -216,14 +232,14 @@ namespace Maverick.Json
             {
                 if ( continuous )
                 {
-                    property = properties.FindProperty( GetSpan( byteCount ) );
+                    property = properties.NameTable.Find( m_memory.Slice( 0, byteCount ) );
                 }
                 else
                 {
-                    Span<Byte> bytes = stackalloc Byte[ byteCount ];
-                    CopySpan( bytes );
+                    var bytes = stackalloc Byte[ byteCount ];
+                    CopySpan( new Span<Byte>( bytes, byteCount ) );
 
-                    property = properties.FindProperty( bytes );
+                    property = properties.NameTable.Find( bytes, byteCount );
                 }
             }
 

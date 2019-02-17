@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 
 namespace Maverick.Json.Serialization
 {
-    internal unsafe struct JsonNameKey : IEquatable<JsonNameKey>
+    internal unsafe readonly struct JsonNameKey : IEquatable<JsonNameKey>
     {
         internal JsonNameKey( Byte* bytes, Int32 length )
         {
@@ -13,7 +14,7 @@ namespace Maverick.Json.Serialization
         }
 
 
-        internal JsonNameKey( Byte[] bytes )
+        internal JsonNameKey( ReadOnlyMemory<Byte> bytes )
         {
             UnsafeBytes = null;
 
@@ -24,13 +25,8 @@ namespace Maverick.Json.Serialization
 
         public Boolean Equals( JsonNameKey other )
         {
-            if ( other.Length != Length )
-            {
-                return false;
-            }
-
-            var left = Bytes != null ? new ReadOnlySpan<Byte>( Bytes ) : new ReadOnlySpan<Byte>( UnsafeBytes, Length );
-            var right = other.Bytes != null ? new ReadOnlySpan<Byte>( other.Bytes ) : new ReadOnlySpan<Byte>( other.UnsafeBytes, other.Length );
+            var left = UnsafeBytes == null ? Bytes.Span : new ReadOnlySpan<Byte>( UnsafeBytes, Length );
+            var right = other.UnsafeBytes == null ? other.Bytes.Span : new ReadOnlySpan<Byte>( other.UnsafeBytes, other.Length );
 
             return left.SequenceEqual( right );
         }
@@ -38,19 +34,19 @@ namespace Maverick.Json.Serialization
 
         public override Int32 GetHashCode()
         {
+            var bytes = UnsafeBytes == null ? Bytes.Span : new ReadOnlySpan<Byte>( UnsafeBytes, Length );
             var hashCode = Length;
-            var remainingLength = Length;
 
-            if ( Bytes != null )
+            var ints = MemoryMarshal.Cast<Byte, Int32>( bytes );
+
+            for ( var i = 0; i < ints.Length; ++i )
             {
-                fixed ( Byte* fixedBytes = Bytes )
-                {
-                    ComputeHashCode( ref hashCode, fixedBytes );
-                }
+                hashCode += ( hashCode << 7 ) ^ ints[ i ];
             }
-            else
+
+            for ( var i = ints.Length * 4; i < bytes.Length; ++i )
             {
-                ComputeHashCode( ref hashCode, UnsafeBytes );
+                hashCode += ( hashCode << 7 ) ^ bytes[ i ];
             }
 
             hashCode -= hashCode >> 17;
@@ -61,40 +57,12 @@ namespace Maverick.Json.Serialization
         }
 
 
-        private void ComputeHashCode( ref Int32 hashCode, Byte* bytes )
-        {
-            var remainingLength = Length;
-
-            for ( var i = 0; i < Length; )
-            {
-                if ( remainingLength > 3 )
-                {
-                    hashCode += ( hashCode << 7 ) ^ ( *(Int32*)( bytes + i ) );
-                    remainingLength -= 4;
-                    i += 4;
-                }
-                else if ( remainingLength > 1 )
-                {
-                    hashCode += ( hashCode << 7 ) ^ ( *(Int16*)( bytes + i ) );
-                    remainingLength -= 2;
-                    i += 2;
-                }
-                else
-                {
-                    hashCode += ( hashCode << 7 ) ^ bytes[ i ];
-                    remainingLength -= 1;
-                    i += 1;
-                }
-            }
-        }
-
-
         public override Boolean Equals( Object obj ) => throw new NotSupportedException();
 
 
         public readonly Byte* UnsafeBytes;
         public readonly Int32 Length;
 
-        public readonly Byte[] Bytes;
+        public readonly ReadOnlyMemory<Byte> Bytes;
     }
 }

@@ -26,7 +26,7 @@ namespace Maverick.Json.Serialization
         }
 
 
-        private static ReadOnlySpan<Byte> GetBytes( String propertyName )
+        private static ReadOnlyMemory<Byte> GetBytes( String propertyName )
             => Constants.Encoding.GetBytes( propertyName );
     }
 }

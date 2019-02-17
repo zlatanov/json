@@ -9,7 +9,7 @@ namespace Maverick.Json.Serialization
     {
         internal JsonPropertyCollection( JsonNamingStrategy namingStrategy )
         {
-            m_nameTable = new JsonNameTable<TOwner>( namingStrategy );
+            NameTable = new JsonNameTable<TOwner>( namingStrategy );
         }
 
 
@@ -19,6 +19,7 @@ namespace Maverick.Json.Serialization
         internal JsonProperty<TOwner>[] Sorted { get; private set; }
         internal JsonProperty<TOwner>[] SortedWritable { get; private set; }
         internal JsonProperty<TOwner>[] Required { get; private set; }
+        internal JsonNameTable<TOwner> NameTable { get; }
         public JsonProperty<TOwner> this[ Int32 index ] => m_list[ index ];
 
 
@@ -54,7 +55,7 @@ namespace Maverick.Json.Serialization
                 }
 
                 // Add naming lookup record
-                m_nameTable.Add( property );
+                NameTable.Add( property );
             }
         }
 
@@ -184,9 +185,6 @@ namespace Maverick.Json.Serialization
         }
 
 
-        internal JsonProperty<TOwner> FindProperty( ReadOnlySpan<Byte> propertyBytes ) => m_nameTable.Find( propertyBytes );
-
-
         private void CheckNotFrozen()
         {
             if ( m_frozen )
@@ -198,8 +196,6 @@ namespace Maverick.Json.Serialization
 
         private readonly List<JsonProperty<TOwner>> m_list = new List<JsonProperty<TOwner>>();
         private readonly Dictionary<JsonPropertyName, LinkedList<JsonProperty<TOwner>>> m_dictionary = new Dictionary<JsonPropertyName, LinkedList<JsonProperty<TOwner>>>();
-
-        private JsonNameTable<TOwner> m_nameTable;
 
         private Boolean m_frozen;
     }
