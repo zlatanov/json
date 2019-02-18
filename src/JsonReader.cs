@@ -2,7 +2,6 @@ using System;
 using System.Buffers;
 using System.Buffers.Text;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Maverick.Json.Serialization;
@@ -174,7 +173,7 @@ namespace Maverick.Json
 
                 if ( continuous )
                 {
-                    propertyName = ReadPropertyName( m_memory.Slice( 0, byteCount ), escapeByteCount );
+                    propertyName = ReadPropertyName( m_memory.Slice( m_offset, byteCount ), escapeByteCount );
                 }
                 else
                 {
@@ -232,7 +231,7 @@ namespace Maverick.Json
             {
                 if ( continuous )
                 {
-                    property = properties.NameTable.Find( m_memory.Slice( 0, byteCount ) );
+                    property = properties.NameTable.Find( m_memory.Slice( m_offset, byteCount ) );
                 }
                 else
                 {
@@ -1040,25 +1039,19 @@ namespace Maverick.Json
         {
             while ( !m_memory.IsEmpty )
             {
-                var consumedBytes = 0;
                 var span = m_memory.Span;
 
-                for ( var i = 0; i < span.Length; ++i )
+                for ( var i = m_offset; i < span.Length; ++i )
                 {
                     var b = span[ i ];
                     var token = Constants.AnsiTokenMap[ b ];
 
                     if ( token != JsonToken.WhiteSpace )
                     {
-                        if ( consumedBytes > 0 )
-                        {
-                            Advance( consumedBytes );
-                        }
-
                         return;
                     }
 
-                    ++consumedBytes;
+                    ++m_offset;
 
                     if ( b == Constants.LineFeed )
                     {
@@ -1066,8 +1059,7 @@ namespace Maverick.Json
                     }
                 }
 
-                Debug.Assert( consumedBytes == span.Length );
-                Advance( consumedBytes );
+                Advance();
             }
         }
 
@@ -1077,9 +1069,8 @@ namespace Maverick.Json
             while ( !m_memory.IsEmpty )
             {
                 var span = m_memory.Span;
-                var consumedByteCount = 0;
 
-                for ( var i = 0; i < span.Length; ++i )
+                for ( var i = m_offset; i < span.Length; ++i )
                 {
                     var b = span[ i ];
                     var token = Constants.AnsiTokenMap[ b ];
@@ -1092,18 +1083,18 @@ namespace Maverick.Json
                             break;
 
                         case JsonToken.String:
-                            ++consumedByteCount;
+                            ++m_offset;
                             token = PeekStringOrPropertyName();
                             break;
 
                         case JsonToken.Null:
-                            PeekNull( span, ref consumedByteCount, i );
+                            PeekNull( span, i );
                             break;
 
                         case JsonToken.Comma:
                             if ( !m_expectComma )
                             {
-                                JsonSerializationException.ThrowUnexpectedSymbol( b );
+                                goto case JsonToken.None;
                             }
 
                             m_expectComma = false;
@@ -1121,20 +1112,14 @@ namespace Maverick.Json
                             break;
                     }
 
-                    if ( consumedByteCount > 0 )
-                    {
-                        Advance( consumedByteCount );
-                    }
-
                     return token;
 
                 Continue:
-                    ++consumedByteCount;
+                    ++m_offset;
                     continue;
                 }
 
-                Debug.Assert( consumedByteCount == m_memory.Length );
-                Advance( consumedByteCount );
+                Advance();
             }
 
             return JsonToken.None;
@@ -1152,12 +1137,11 @@ namespace Maverick.Json
         }
 
 
-        private void PeekNull( ReadOnlySpan<Byte> span, ref Int32 consumedByteCount, Int32 startIndex )
+        private void PeekNull( ReadOnlySpan<Byte> span, Int32 startIndex )
         {
             if ( !span.Slice( startIndex ).StartsWith( Constants.Null ) )
             {
-                Advance( consumedByteCount );
-                consumedByteCount = 0;
+                Advance();
 
                 Span<Byte> bytes = stackalloc Byte[ 4 ];
                 CopySpan( bytes );
@@ -1181,9 +1165,9 @@ namespace Maverick.Json
 
         private void CompleteReadNull()
         {
-            Advance( 4 );
             TryPopPropertyName();
 
+            m_offset += 4;
             m_expectComma = true;
             m_currentToken = JsonToken.None;
         }
@@ -1191,7 +1175,7 @@ namespace Maverick.Json
 
         private void CompleteReadStartToken( JsonToken token )
         {
-            Advance( 1 );
+            m_offset += 1;
             m_state.Push( token );
 
             m_expectComma = false;
@@ -1201,9 +1185,9 @@ namespace Maverick.Json
 
         private void CompleteReadToken( JsonToken token, Int32 bytesConsumed )
         {
-            Advance( bytesConsumed );
             TryPopPropertyName();
 
+            m_offset += bytesConsumed;
             m_expectComma = true;
             m_currentToken = JsonToken.None;
         }
@@ -1211,7 +1195,7 @@ namespace Maverick.Json
 
         private void CompleteReadEndToken()
         {
-            Advance( 1 );
+            m_offset += 1;
             m_state.Pop();
             TryPopPropertyName();
 
@@ -1222,7 +1206,7 @@ namespace Maverick.Json
 
         private void CompleteReadPropertyName( Int32 bytesConsumed )
         {
-            Advance( bytesConsumed + 1 );
+            m_offset += bytesConsumed + 1;
             m_state.Push( JsonToken.PropertyName );
 
             // Between the property name and the value there can only be white space
@@ -1238,15 +1222,10 @@ namespace Maverick.Json
                 }
             }
 
-            Advance( 1 );
-
+            m_offset += 1;
             m_expectComma = false;
             m_currentToken = JsonToken.None;
         }
-
-
-        [MethodImpl( MethodImplOptions.NoInlining )]
-        private void ThrowObjectDisposedException() => throw new ObjectDisposedException( GetType().FullName );
 
 
         private Int32 ReadStringSegmentByteCount( ReadOnlySpan<Byte> buffer, ref Int32 escapeByteCount, out Boolean needMoreData )
@@ -1293,7 +1272,7 @@ namespace Maverick.Json
         private Int32 ReadStringByteCount( Int32 maxSize, out Int32 escapeByteCount, out Boolean continuous )
         {
             escapeByteCount = 0;
-            var count = ReadStringSegmentByteCount( m_memory.Span, ref escapeByteCount, out var needMoreData );
+            var count = ReadStringSegmentByteCount( m_memory.Span.Slice( m_offset ), ref escapeByteCount, out var needMoreData );
 
             if ( !needMoreData )
             {
@@ -1301,6 +1280,8 @@ namespace Maverick.Json
             }
             else
             {
+                Advance();
+
                 continuous = false;
                 var position = m_sequence.GetPosition( count, m_position );
 
@@ -1347,7 +1328,7 @@ namespace Maverick.Json
 
         private Int32 ReadValueByteCount( Int32 maxSize, out Boolean continuous )
         {
-            var count = ReadValueSegmentByteCount( m_memory.Span, out var needMoreData );
+            var count = ReadValueSegmentByteCount( m_memory.Span.Slice( m_offset ), out var needMoreData );
 
             if ( !needMoreData )
             {
@@ -1355,6 +1336,8 @@ namespace Maverick.Json
             }
             else
             {
+                Advance();
+
                 continuous = false;
                 var position = m_sequence.GetPosition( count, m_position );
 
@@ -1385,8 +1368,15 @@ namespace Maverick.Json
         }
 
 
-        private void Advance( Int32 byteCount )
+        private void Advance()
         {
+            var byteCount = m_offset;
+
+            if ( byteCount == 0 )
+            {
+                return;
+            }
+
             if ( byteCount >= m_memory.Length )
             {
                 m_position = m_sequence.GetPosition( byteCount, m_position );
@@ -1397,16 +1387,35 @@ namespace Maverick.Json
                 m_position = new SequencePosition( m_position.GetObject(), m_position.GetInteger() + byteCount );
                 m_memory = m_memory.Slice( byteCount );
             }
+
+            m_offset = 0;
         }
 
 
-        private ReadOnlySpan<Byte> GetSpan( Int32 size ) => m_memory.Span.Slice( 0, size );
+        private ReadOnlySpan<Byte> GetSpan( Int32 size ) => m_memory.Span.Slice( m_offset, size );
 
 
-        private void CopySpan( Span<Byte> bytes ) => m_sequence.Slice( m_position, bytes.Length ).CopyTo( bytes );
+        private void CopySpan( Span<Byte> bytes )
+        {
+            Advance();
+            m_sequence.Slice( m_position, bytes.Length ).CopyTo( bytes );
+        }
 
 
-        private Byte PeekByte() => m_memory.IsEmpty ? Byte.MinValue : m_memory.Span[ 0 ];
+        private Byte PeekByte()
+        {
+            var span = m_memory.Span;
+            var offset = m_offset;
+
+            if ( span.Length > offset )
+            {
+                return span[ offset ];
+            }
+
+            Advance();
+
+            return m_memory.IsEmpty ? Byte.MinValue : m_memory.Span[ 0 ];
+        }
 
 
         private unsafe String UnescapeString( ReadOnlySpan<Byte> span, Int32 escapeByteCount )
@@ -1585,6 +1594,7 @@ namespace Maverick.Json
 
         private SequencePosition m_position;    // The current position of the reader
         private ReadOnlyMemory<Byte> m_memory;  // The memory at the current position
+        private Int32 m_offset;                 // Offset from the current position
 
         private JsonToken m_currentToken = JsonToken.None;
         private Boolean m_expectComma;
