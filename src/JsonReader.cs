@@ -36,7 +36,7 @@ namespace Maverick.Json
             {
                 m_currentToken = PeekCore();
 
-                if ( m_expectComma )
+                if ( m_expectComma && m_currentToken != JsonToken.None )
                 {
                     JsonSerializationException.ThrowMissingComma( m_currentToken );
                 }
@@ -97,13 +97,13 @@ namespace Maverick.Json
             void SkipNumber()
             {
                 var byteCount = ReadValueByteCount( Constants.MaxFloatSize, out var _ );
-                CompleteReadToken( JsonToken.Number, byteCount );
+                CompleteReadValueToken( byteCount );
             }
 
             void SkipString()
             {
                 var byteCount = ReadStringByteCount( Int32.MaxValue, out var _, out var _ );
-                CompleteReadToken( JsonToken.String, byteCount + 1 );
+                CompleteReadValueToken( byteCount + 1 );
             }
         }
 
@@ -308,7 +308,7 @@ namespace Maverick.Json
                 JsonSerializationException.ThrowInvalidValue( typeof( Int64 ), UnescapeString( buffer, 0 ) );
             }
 
-            CompleteReadToken( JsonToken.Number, buffer.Length );
+            CompleteReadValueToken( buffer.Length );
 
             return value;
         }
@@ -351,7 +351,7 @@ namespace Maverick.Json
                 JsonSerializationException.ThrowInvalidValue( typeof( UInt64 ), UnescapeString( buffer, 0 ) );
             }
 
-            CompleteReadToken( JsonToken.Number, buffer.Length );
+            CompleteReadValueToken( buffer.Length );
 
             return value;
         }
@@ -424,7 +424,7 @@ namespace Maverick.Json
             resultChar = result[ 0 ];
 
         Complete:
-            CompleteReadToken( JsonToken.String, byteCount + 1 );
+            CompleteReadValueToken( byteCount + 1 );
 
             return resultChar;
         }
@@ -450,7 +450,7 @@ namespace Maverick.Json
 
             if ( byteCount == 0 )
             {
-                CompleteReadToken( JsonToken.String, 1 );
+                CompleteReadValueToken( 1 );
                 return String.Empty;
             }
 
@@ -491,7 +491,7 @@ namespace Maverick.Json
                 result = UnescapeString( buffer, escapeByteCount );
             }
 
-            CompleteReadToken( JsonToken.String, buffer.Length + 1 );
+            CompleteReadValueToken( buffer.Length + 1 );
 
             return result;
         }
@@ -539,7 +539,7 @@ namespace Maverick.Json
                 JsonSerializationException.ThrowInvalidValue( typeof( Single ), UnescapeString( buffer, 0 ) );
             }
 
-            CompleteReadToken( JsonToken.Number, buffer.Length );
+            CompleteReadValueToken( buffer.Length );
 
             return value;
         }
@@ -587,7 +587,7 @@ namespace Maverick.Json
                 JsonSerializationException.ThrowInvalidValue( typeof( Double ), UnescapeString( buffer, 0 ) );
             }
 
-            CompleteReadToken( JsonToken.Number, buffer.Length );
+            CompleteReadValueToken( buffer.Length );
 
             return value;
         }
@@ -630,7 +630,7 @@ namespace Maverick.Json
                 JsonSerializationException.ThrowInvalidValue( typeof( Decimal ), UnescapeString( buffer, 0 ) );
             }
 
-            CompleteReadToken( JsonToken.Number, buffer.Length );
+            CompleteReadValueToken( buffer.Length );
 
             return value;
         }
@@ -689,7 +689,7 @@ namespace Maverick.Json
                 }
             }
 
-            CompleteReadToken( JsonToken.Boolean, value ? 4 : 5 );
+            CompleteReadValueToken( value ? 4 : 5 );
 
             return value;
         }
@@ -732,7 +732,7 @@ namespace Maverick.Json
                 JsonSerializationException.ThrowInvalidValue( typeof( TimeSpan ), UnescapeString( buffer, 0 ) );
             }
 
-            CompleteReadToken( JsonToken.String, buffer.Length + 1 );
+            CompleteReadValueToken( buffer.Length + 1 );
 
             return value;
         }
@@ -775,7 +775,7 @@ namespace Maverick.Json
                 JsonSerializationException.ThrowInvalidValue( typeof( DateTime ), UnescapeString( buffer, 0 ) );
             }
 
-            CompleteReadToken( JsonToken.String, buffer.Length + 1 );
+            CompleteReadValueToken( buffer.Length + 1 );
 
             return value;
         }
@@ -818,7 +818,7 @@ namespace Maverick.Json
                 JsonSerializationException.ThrowInvalidValue( typeof( DateTimeOffset ), UnescapeString( buffer, 0 ) );
             }
 
-            CompleteReadToken( JsonToken.String, buffer.Length + 1 );
+            CompleteReadValueToken( buffer.Length + 1 );
 
             return value;
         }
@@ -861,7 +861,7 @@ namespace Maverick.Json
                 JsonSerializationException.ThrowInvalidValue( typeof( Guid ), UnescapeString( buffer, 0 ) );
             }
 
-            CompleteReadToken( JsonToken.String, buffer.Length + 1 );
+            CompleteReadValueToken( buffer.Length + 1 );
 
             return value;
         }
@@ -895,7 +895,7 @@ namespace Maverick.Json
                     throw new JsonSerializationException( "Detected invalid base64 string." );
                 }
 
-                CompleteReadToken( JsonToken.String, byteCount + 1 );
+                CompleteReadValueToken( byteCount + 1 );
 
                 return rentedBytes.AsSpan( 0, bytesWritten ).ToArray();
             }
@@ -1183,7 +1183,7 @@ namespace Maverick.Json
         }
 
 
-        private void CompleteReadToken( JsonToken token, Int32 bytesConsumed )
+        private void CompleteReadValueToken( Int32 bytesConsumed )
         {
             TryPopPropertyName();
 
@@ -1533,19 +1533,19 @@ namespace Maverick.Json
 
             if ( span.SequenceEqual( Constants.NaN ) )
             {
-                CompleteReadToken( JsonToken.String, Constants.NaN.Length + 1 );
+                CompleteReadValueToken( Constants.NaN.Length + 1 );
 
                 return Single.NaN;
             }
             else if ( span.SequenceEqual( Constants.NegativeInfinity ) )
             {
-                CompleteReadToken( JsonToken.String, Constants.NegativeInfinity.Length + 1 );
+                CompleteReadValueToken( Constants.NegativeInfinity.Length + 1 );
 
                 return Single.NegativeInfinity;
             }
             else if ( span.SequenceEqual( Constants.PositiveInfinity ) )
             {
-                CompleteReadToken( JsonToken.String, Constants.PositiveInfinity.Length + 1 );
+                CompleteReadValueToken( Constants.PositiveInfinity.Length + 1 );
 
                 return Single.PositiveInfinity;
             }
@@ -1564,19 +1564,19 @@ namespace Maverick.Json
 
             if ( span.SequenceEqual( Constants.NaN ) )
             {
-                CompleteReadToken( JsonToken.String, Constants.NaN.Length + 1 );
+                CompleteReadValueToken( Constants.NaN.Length + 1 );
 
                 return Double.NaN;
             }
             else if ( span.SequenceEqual( Constants.NegativeInfinity ) )
             {
-                CompleteReadToken( JsonToken.String, Constants.NegativeInfinity.Length + 1 );
+                CompleteReadValueToken( Constants.NegativeInfinity.Length + 1 );
 
                 return Double.NegativeInfinity;
             }
             else if ( span.SequenceEqual( Constants.PositiveInfinity ) )
             {
-                CompleteReadToken( JsonToken.String, Constants.PositiveInfinity.Length + 1 );
+                CompleteReadValueToken( Constants.PositiveInfinity.Length + 1 );
 
                 return Double.PositiveInfinity;
             }
