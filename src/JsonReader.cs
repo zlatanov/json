@@ -27,6 +27,12 @@ namespace Maverick.Json
         }
 
 
+        /// <summary>
+        /// User defined object state that can be used by application.
+        /// </summary>
+        public Object State { get; set; }
+
+
         public JsonSettings Settings { get; }
 
 
@@ -371,7 +377,7 @@ namespace Maverick.Json
         public unsafe Char ReadChar()
         {
             CheckToken( JsonToken.String );
-            var byteCount = ReadEscapedStringByteCount( Constants.MaxCharSize, out var escapeByteCount, out var continuous );
+            var byteCount = ReadEscapedStringByteCount( Constants.MaxCharSize, out var escapeByteCount, out var _ );
 
             if ( byteCount == 0 )
             {
@@ -381,7 +387,7 @@ namespace Maverick.Json
             Span<Byte> bytes = stackalloc Byte[ byteCount ];
             CopySpan( bytes );
 
-            var resultChar = default( Char );
+            Char resultChar;
 
             if ( bytes[ 0 ] == (Byte)'\\' )
             {
