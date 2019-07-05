@@ -86,7 +86,7 @@ namespace Maverick.Json
         [Fact]
         public void ByteArrayShouldNotInfiniteLoop()
         {
-            var data = new Byte[ 10000 ];
+            var data = new Byte[10000];
 
             using ( var rng = new RNGCryptoServiceProvider() )
             {
@@ -97,6 +97,28 @@ namespace Maverick.Json
             var base64 = Convert.ToBase64String( data );
 
             Assert.Equal( "\"" + base64 + "\"", json );
+        }
+
+
+        [Fact]
+        public void DelegateShouldNotBeSerialized()
+        {
+            var json = JsonConvert.Serialize( new
+            {
+                Delegate = new Func<String>( () => "Should Not Be Serialized" )
+            } );
+
+            Assert.Equal( "{}", json );
+        }
+
+
+        [Fact]
+        public void SpanShouldNotBeSerialized()
+        {
+            var memory = new Memory<Byte>( new Byte[1] { 1 } );
+            var json = JsonConvert.Serialize( memory );
+
+            Assert.Equal( "{\"Length\":1,\"IsEmpty\":false}", json );
         }
 
 

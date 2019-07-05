@@ -77,10 +77,19 @@ namespace Maverick.Json.Serialization
             foreach ( var member in allMembers )
             {
                 if ( ReflectionHelpers.GetAttribute<JsonIgnoreAttribute>( member ) != null )
-                {
                     continue;
-                }
-                else if ( ReflectionHelpers.GetAttribute<JsonPropertyAttribute>( member ) != null )
+
+                // Some types aren't serializable
+                var memberType = ReflectionHelpers.GetFieldOrPropertyType( member );
+
+                if ( typeof( Delegate ).IsAssignableFrom( memberType ) )
+                    continue;
+
+                if ( memberType.IsValueType &&
+                     memberType.GetCustomAttributes().Any( x => x.GetType().FullName == "System.Runtime.CompilerServices.IsByRefLikeAttribute" ) )
+                    continue;
+
+                if ( ReflectionHelpers.GetAttribute<JsonPropertyAttribute>( member ) != null )
                 {
                     serializableMembers.Add( member );
                 }
@@ -94,6 +103,8 @@ namespace Maverick.Json.Serialization
             return serializableMembers;
         }
 
+
+        ref struct Test { }
 
         protected internal virtual JsonObjectContract<TOwner> CreateObjectContract<TOwner>( JsonSettings settings )
         {
@@ -145,9 +156,9 @@ namespace Maverick.Json.Serialization
 
             for ( var i = 0; i < converters.Count; ++i )
             {
-                if ( converters[ i ].CanConvert( objectType ) )
+                if ( converters[i].CanConvert( objectType ) )
                 {
-                    return converters[ i ];
+                    return converters[i];
                 }
             }
 
