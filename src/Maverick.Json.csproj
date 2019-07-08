@@ -5,7 +5,7 @@
         <Version>1.0</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
-        <PackageVersion>1.0.2</PackageVersion>
+        <PackageVersion>1.0.3</PackageVersion>
         <PackageProjectUrl>https://github.com/zlatanov/json</PackageProjectUrl>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageTags>json</PackageTags>
