@@ -640,8 +640,6 @@ line 2",
 
             Assert.Equal( expected, actual );
 
-            var xx = NJ.JsonConvert.DeserializeObject<T>( actual );
-
             // Test deserialization
             var deserialziedObj = JsonConvert.Deserialize<T>( actual );
             var deserializedObjJson = JsonConvert.Serialize( deserialziedObj );

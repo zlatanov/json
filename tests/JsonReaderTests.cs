@@ -175,6 +175,37 @@ namespace Maverick.Json
         }
 
 
+        [Fact]
+        public void Skip()
+        {
+            var json = JsonConvert.Serialize( new
+            {
+                Name = "Not a Random String",
+                Age = 22,
+                Enabled = true,
+                Null = default( Int32? ),
+                Array = new Object[] { "String", 0.0, true },
+                Addresses = new
+                {
+                    Country = new
+                    {
+                        Name = "France"
+                    }
+                }
+            }, settings: new JsonSettings
+            {
+                Format = JsonFormat.Indented,
+                SerializeNulls = true
+            } );
+            var reader = CreateReader( json );
+
+            // The skip should ignore the entire json
+            reader.Skip();
+
+            Assert.Equal( JsonToken.None, reader.Peek() );
+        }
+
+
         private static JsonReader CreateReader( String json )
         {
             var bytes = Encoding.UTF8.GetBytes( json );

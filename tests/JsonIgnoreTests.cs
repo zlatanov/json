@@ -42,11 +42,16 @@ namespace Maverick.Json
 
         private sealed class TestObject
         {
-            [JsonIgnore]
+            [CustomJsonIgnore]
             public String Name { get; set; }
 
 
             public Int32 Age { get; set; }
+        }
+
+
+        private sealed class CustomJsonIgnoreAttribute : JsonIgnoreAttribute
+        {
         }
     }
 }

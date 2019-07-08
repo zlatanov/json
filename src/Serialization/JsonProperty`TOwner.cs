@@ -30,6 +30,10 @@ namespace Maverick.Json.Serialization
                     mappedName = propertyAttribute.Name;
                 }
             }
+            else
+            {
+                SerializeNulls = parent.Settings.SerializeNulls;
+            }
 
             Name = mappedName;
             PropertyType = ReflectionHelpers.GetFieldOrPropertyType( member );

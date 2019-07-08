@@ -28,6 +28,12 @@ namespace Maverick.Json
         }
 
 
+        /// <summary>
+        /// User defined object state that can be used by application.
+        /// </summary>
+        public Object State { get; set; }
+
+
         public JsonFormat Format { get; set; }
 
 
@@ -39,7 +45,7 @@ namespace Maverick.Json
 
         public void WriteStartObject()
         {
-            WriteStarted( State.Start );
+            WriteStarted( InternalState.Start );
             WriteUTFByte( (Byte)'{' );
 
             Depth += 1;
@@ -55,14 +61,14 @@ namespace Maverick.Json
 
             Depth -= 1;
 
-            WriteStarted( State.End );
+            WriteStarted( InternalState.End );
             WriteUTFByte( (Byte)'}' );
         }
 
 
         public void WriteStartArray()
         {
-            WriteStarted( State.Start );
+            WriteStarted( InternalState.Start );
             WriteUTFByte( (Byte)'[' );
 
             Depth += 1;
@@ -78,7 +84,7 @@ namespace Maverick.Json
 
             Depth -= 1;
 
-            WriteStarted( State.End );
+            WriteStarted( InternalState.End );
             WriteUTFByte( (Byte)']' );
         }
 
@@ -90,14 +96,14 @@ namespace Maverick.Json
                 throw new ArgumentNullException( nameof( name ) );
             }
 
-            WriteStarted( State.PropertyName );
+            WriteStarted( InternalState.PropertyName );
             WriteUTFBytes( name.GetBytes( Settings.NamingStrategy ) );
         }
 
 
         public void WriteNull()
         {
-            WriteStarted( State.Value );
+            WriteStarted( InternalState.Value );
             WriteUTFBytes( Constants.Null );
         }
 
@@ -200,7 +206,7 @@ namespace Maverick.Json
 
         public void WriteValue( Int64 value )
         {
-            WriteStarted( State.Value );
+            WriteStarted( InternalState.Value );
 
             if ( !Utf8Formatter.TryFormat( value, m_output.GetSpan(), out var bytesWritten ) &&
                  !Utf8Formatter.TryFormat( value, m_output.GetSpan( Constants.Max64BitNumberSize ), out bytesWritten ) )
@@ -227,7 +233,7 @@ namespace Maverick.Json
 
         public void WriteValue( UInt64 value )
         {
-            WriteStarted( State.Value );
+            WriteStarted( InternalState.Value );
 
             if ( !Utf8Formatter.TryFormat( value, m_output.GetSpan(), out var bytesWritten ) &&
                  !Utf8Formatter.TryFormat( value, m_output.GetSpan( Constants.Max64BitNumberSize ), out bytesWritten ) )
@@ -260,7 +266,7 @@ namespace Maverick.Json
             }
             else
             {
-                WriteStarted( State.Value );
+                WriteStarted( InternalState.Value );
                 WriteStringEscaped( value.AsSpan(), true );
             }
         }
@@ -268,7 +274,7 @@ namespace Maverick.Json
 
         public void WriteValue( ReadOnlySpan<Char> value, Boolean escape )
         {
-            WriteStarted( State.Value );
+            WriteStarted( InternalState.Value );
 
             if ( escape )
             {
@@ -283,7 +289,7 @@ namespace Maverick.Json
 
         public void WriteUTFString( ReadOnlySpan<Byte> value )
         {
-            WriteStarted( State.Value );
+            WriteStarted( InternalState.Value );
             WriteUTFByte( Constants.Quote );
             WriteUTFBytes( value );
             WriteUTFByte( Constants.Quote );
@@ -292,7 +298,7 @@ namespace Maverick.Json
 
         public void WriteValue( Single value )
         {
-            WriteStarted( State.Value );
+            WriteStarted( InternalState.Value );
 
             if ( Single.IsNaN( value ) )
             {
@@ -335,7 +341,7 @@ namespace Maverick.Json
 
         public void WriteValue( Double value )
         {
-            WriteStarted( State.Value );
+            WriteStarted( InternalState.Value );
 
             if ( Double.IsNaN( value ) )
             {
@@ -378,7 +384,7 @@ namespace Maverick.Json
 
         public void WriteValue( Decimal value )
         {
-            WriteStarted( State.Value );
+            WriteStarted( InternalState.Value );
 
             var span = m_output.GetSpan( Constants.MaxDecimalSize );
 
@@ -429,7 +435,7 @@ namespace Maverick.Json
 
         public void WriteValue( Boolean value )
         {
-            WriteStarted( State.Value );
+            WriteStarted( InternalState.Value );
             WriteUTFBytes( value ? Constants.True : Constants.False );
         }
 
@@ -449,7 +455,7 @@ namespace Maverick.Json
 
         public unsafe void WriteValue( Char value )
         {
-            WriteStarted( State.Value );
+            WriteStarted( InternalState.Value );
             WriteStringEscaped( new ReadOnlySpan<Char>( &value, 1 ), true );
         }
 
@@ -469,7 +475,7 @@ namespace Maverick.Json
 
         public void WriteValue( TimeSpan value )
         {
-            WriteStarted( State.Value );
+            WriteStarted( InternalState.Value );
             WriteUTFByte( Constants.Quote );
 
             if ( !Utf8Formatter.TryFormat( value, m_output.GetSpan(), out var bytesWritten ) &&
@@ -499,7 +505,7 @@ namespace Maverick.Json
 
         public virtual void WriteValue( DateTime value )
         {
-            WriteStarted( State.Value );
+            WriteStarted( InternalState.Value );
             WriteUTFByte( Constants.Quote );
             {
                 // Unspecified: "yyyy-mm-ddThh:mm:ss.fffffff"
@@ -605,7 +611,7 @@ namespace Maverick.Json
 
         public virtual void WriteValue( DateTimeOffset value )
         {
-            WriteStarted( State.Value );
+            WriteStarted( InternalState.Value );
             WriteUTFByte( Constants.Quote );
             {
                 // yyyy-mm-ddThh:mm:ss.fffffff+00:00
@@ -706,7 +712,7 @@ namespace Maverick.Json
 
         public void WriteValue( Guid value )
         {
-            WriteStarted( State.Value );
+            WriteStarted( InternalState.Value );
             WriteUTFByte( Constants.Quote );
 
             if ( !Utf8Formatter.TryFormat( value, m_output.GetSpan( Constants.MaxGuidSize ), out var bytesWritten ) )
@@ -741,7 +747,7 @@ namespace Maverick.Json
             }
             else
             {
-                WriteStarted( State.Value );
+                WriteStarted( InternalState.Value );
                 WriteUTFByte( Constants.Quote );
 
                 var remaining = value.AsSpan();
@@ -896,22 +902,22 @@ namespace Maverick.Json
         private void ThrowFormatException<T>( T value ) => throw new FormatException( $"Failed to serialize {value} of type {typeof( T )}. The buffer was too small." );
 
 
-        private void WriteStarted( State newState )
+        private void WriteStarted( InternalState newState )
         {
             var currentState = m_state;
 
-            if ( currentState == State.PropertyName )
+            if ( currentState == InternalState.PropertyName )
             {
                 if ( Format != JsonFormat.None )
                 {
                     WriteUTFByte( (Byte)' ' );
                 }
             }
-            else if ( currentState != State.None )
+            else if ( currentState != InternalState.None )
             {
-                if ( newState != State.End )
+                if ( newState != InternalState.End )
                 {
-                    if ( currentState >= State.Value )
+                    if ( currentState >= InternalState.Value )
                     {
                         WriteUTFByte( (Byte)',' );
 
@@ -925,7 +931,7 @@ namespace Maverick.Json
                 if ( Format == JsonFormat.Indented )
                 {
                     // Do not indent if the previous state was start and the current is end
-                    if ( !( currentState == State.Start && newState == State.End ) )
+                    if ( !( currentState == InternalState.Start && newState == InternalState.End ) )
                     {
                         WriteIndent();
                     }
@@ -934,10 +940,6 @@ namespace Maverick.Json
 
             m_state = newState;
         }
-
-
-        [MethodImpl( MethodImplOptions.NoInlining )]
-        private void ThrowObjectDisposedException() => throw new ObjectDisposedException( GetType().FullName );
 
 
         private unsafe void WriteString( ReadOnlySpan<Char> value, Boolean withQuotes )
@@ -1067,19 +1069,6 @@ namespace Maverick.Json
 
 
         [MethodImpl( MethodImplOptions.AggressiveInlining )]
-        private void WriteUTFBytes( Byte b0, Byte b1, Byte b2 )
-        {
-            var span = m_output.GetSpan( 3 );
-
-            span[ 2 ] = b2;
-            span[ 1 ] = b1;
-            span[ 0 ] = b0;
-
-            m_output.Advance( 3 );
-        }
-
-
-        [MethodImpl( MethodImplOptions.AggressiveInlining )]
         private static Boolean NeedEscape( ReadOnlySpan<Char> src, Int32 i )
         {
             // Characters which have to be escaped:
@@ -1107,11 +1096,11 @@ namespace Maverick.Json
 
         private readonly IBufferWriter<Byte> m_output;
         private List<Object> m_circularReferences;
-        private State m_state;
+        private InternalState m_state;
         private Encoder m_encoder;
 
 
-        private enum State
+        private enum InternalState
         {
             None,
             Start,
