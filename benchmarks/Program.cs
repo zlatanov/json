@@ -1,5 +1,9 @@
 ﻿using System;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using BenchmarkDotNet.Running;
+using Maverick.Json.Async;
 
 namespace Maverick.Json.Benchmarks
 {
@@ -8,7 +12,17 @@ namespace Maverick.Json.Benchmarks
         public static Random Rng { get; } = new Random();
 
 
-        static void Main( String[] args ) => BenchmarkSwitcher.FromAssembly( typeof( Program ).Assembly ).Run( args );
+        static async Task Main( String[] args )
+        {
+            //var objs = Enumerable.Range( 0, 100000 ).Select( x => LargeObject.Create() ).ToList();
+
+            //using ( var buffer = new JsonAsyncStreamWriter( Stream.Null ) )
+            //{
+            //    await new JsonAsyncWriter( buffer ).WriteValueAsync( objs );
+            //    await buffer.FlushAsync();
+            //}
+            BenchmarkSwitcher.FromAssembly( typeof( Program ).Assembly ).Run( args );
+        }
 
 
         public static unsafe String RandomString( Int32 length, String alphabet )

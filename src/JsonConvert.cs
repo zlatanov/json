@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Buffers;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using Maverick.Json.Async;
 
 namespace Maverick.Json
 {
@@ -27,6 +30,24 @@ namespace Maverick.Json
         }
 
 
+        public static async Task<String> SerializeAsync<T>( T value, JsonSettings settings = null, JsonFormat? format = null )
+        {
+            using ( var buffer = new JsonBufferWriter( BufferSize ) )
+            {
+                var writer = new JsonAsyncWriter( buffer, settings ?? JsonSettings.Default );
+
+                if ( format != null )
+                {
+                    writer.Format = format.Value;
+                }
+
+                await writer.WriteValueAsync( value );
+
+                return Constants.Encoding.GetString( buffer.Sequence );
+            }
+        }
+
+
         public static void Serialize<T>( Stream stream, T value, JsonFormat? format = null, JsonSettings settings = null )
         {
             using ( var buffer = new JsonStreamWriter( stream, BufferSize ) )
@@ -39,6 +60,23 @@ namespace Maverick.Json
                 }
 
                 writer.WriteValue( value );
+            }
+        }
+
+
+        public static async Task SerializeAsync<T>( Stream stream, T value, JsonSettings settings = null, JsonFormat? format = null, CancellationToken cancellationToken = default )
+        {
+            using ( var buffer = new JsonAsyncStreamWriter( stream, BufferSize ) )
+            {
+                var writer = new JsonAsyncWriter( buffer, settings ?? JsonSettings.Default, cancellationToken );
+
+                if ( format != null )
+                {
+                    writer.Format = format.Value;
+                }
+
+                await writer.WriteValueAsync( value ).ConfigureAwait( false );
+                await buffer.FlushAsync( cancellationToken ).ConfigureAwait( false );
             }
         }
 

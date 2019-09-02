@@ -40,7 +40,7 @@ namespace Maverick.Json
         public JsonSettings Settings { get; }
 
 
-        public Int32 Depth { get; private set; }
+        public Int32 Depth { get; private protected set; }
 
 
         public void WriteStartObject()
@@ -260,7 +260,7 @@ namespace Maverick.Json
 
         public void WriteValue( String value )
         {
-            if ( value == null )
+            if ( value is null )
             {
                 WriteNull();
             }
@@ -899,10 +899,10 @@ namespace Maverick.Json
 
 
         [MethodImpl( MethodImplOptions.NoInlining )]
-        private void ThrowFormatException<T>( T value ) => throw new FormatException( $"Failed to serialize {value} of type {typeof( T )}. The buffer was too small." );
+        protected void ThrowFormatException<T>( T value ) => throw new FormatException( $"Failed to serialize {value} of type {typeof( T )}. The buffer was too small." );
 
 
-        private void WriteStarted( InternalState newState )
+        private protected void WriteStarted( InternalState newState )
         {
             var currentState = m_state;
 
@@ -1094,13 +1094,13 @@ namespace Maverick.Json
         }
 
 
-        private readonly IBufferWriter<Byte> m_output;
-        private List<Object> m_circularReferences;
+        private protected readonly IBufferWriter<Byte> m_output;
+        private protected List<Object> m_circularReferences;
         private InternalState m_state;
-        private Encoder m_encoder;
+        private protected Encoder m_encoder;
 
 
-        private enum InternalState
+        private protected enum InternalState
         {
             None,
             Start,

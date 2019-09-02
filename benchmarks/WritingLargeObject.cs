@@ -3,8 +3,10 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
+using Maverick.Json.Async;
 
 namespace Maverick.Json.Benchmarks
 {
@@ -43,6 +45,18 @@ namespace Maverick.Json.Benchmarks
             using ( var buffer = new JsonStreamWriter( Stream.Null ) )
             {
                 new JsonWriter( buffer ).WriteValue( Objects );
+            }
+        }
+
+
+        [Benchmark]
+        [BenchmarkCategory( "Write" )]
+        public async Task WriteMaverickAsync()
+        {
+            using ( var buffer = new JsonAsyncStreamWriter( Stream.Null ) )
+            {
+                await new JsonAsyncWriter( buffer ).WriteValueAsync( Objects );
+                await buffer.FlushAsync();
             }
         }
 

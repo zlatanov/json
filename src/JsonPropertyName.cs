@@ -19,10 +19,7 @@ namespace Maverick.Json
         internal String Value => m_data[ 0 ].Value;
 
 
-        internal String GetString( JsonNamingStrategy strategy ) => m_data[ (Byte)strategy ].Value;
-
-
-        internal ReadOnlySpan<Byte> GetBytes( JsonNamingStrategy strategy ) => m_data[ (Byte)strategy ].ValueBytes;
+        internal Byte[] GetBytes( JsonNamingStrategy strategy ) => m_data[ (Byte)strategy ].ValueBytes;
 
 
         internal ReadOnlyMemory<Byte> GetBytesNoQuotes( JsonNamingStrategy strategy )

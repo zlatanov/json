@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using Maverick.Json.Async;
 
 namespace Maverick.Json.Serialization
 {
@@ -76,6 +78,63 @@ namespace Maverick.Json.Serialization
         }
 
 
+        protected internal override Task WriteValueAsync( JsonAsyncWriter writer, TOwner owner )
+        {
+            if ( ShouldSerialize != null && !ShouldSerialize( owner ) )
+            {
+                return Task.CompletedTask;
+            }
+
+            var value = m_getter( owner );
+
+            if ( value == null && !SerializeNulls )
+            {
+                return Task.CompletedTask;
+            }
+
+            var task = writer.WritePropertyNameAsync( Name );
+
+            if ( !task.IsCompleted )
+                return WriteValueAsync( writer, value, task );
+
+            if ( Converter != null )
+            {
+                // Try to avoid boxing if possible
+                if ( s_isValueType && Converter is JsonConverter<TProperty> valueConverter )
+                {
+                    return valueConverter.WriteAsync( writer, value );
+                }
+                
+                return Converter.WriteObjectAsync( writer, value );
+            }
+
+            return writer.WriteValueAsync( value );
+        }
+
+
+        private async Task WriteValueAsync( JsonAsyncWriter writer, TProperty value, Task pendingTask )
+        {
+            await pendingTask;
+
+            if ( Converter != null )
+            {
+                // Try to avoid boxing if possible
+                if ( s_isValueType && Converter is JsonConverter<TProperty> valueConverter )
+                {
+                    await valueConverter.WriteAsync( writer, value );
+                }
+                else
+                {
+                    await Converter.WriteObjectAsync( writer, value );
+                }
+            }
+            else
+            {
+                await writer.WriteValueAsync( value );
+            }
+        }
+
+
         internal override unsafe void ReadValue( JsonReader reader, ref TOwner target, ref JsonPropertyValues<TOwner> propertyValues )
         {
             TProperty value;
@@ -135,7 +194,7 @@ namespace Maverick.Json.Serialization
 
             // We need to get the ref TOwner type which is ByRef and the only way to do this is using reflection
             var target = Expression.Parameter( typeof( Setter ).GetMethod( "Invoke" ).GetParameters()[ 0 ].ParameterType, "target" );
-            var setter = default( Expression );
+            Expression setter;
 
             if ( member is PropertyInfo property )
             {

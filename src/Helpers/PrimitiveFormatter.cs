@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using Maverick.Json.Async;
 
 namespace Maverick.Json
 {
@@ -12,18 +14,21 @@ namespace Maverick.Json
             var nonNullableType = Nullable.GetUnderlyingType( type ) ?? type;
             var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
-            MethodInfo writeMethod, readMethod = null;
+            MethodInfo writeMethod, writeAsyncMethod, readMethod = null;
 
             if ( nonNullableType.IsEnum )
             {
                 var methodName = nonNullableType != type ? nameof( JsonWriter.WriteEnumNullable ) : nameof( JsonWriter.WriteEnum );
 
                 writeMethod = typeof( JsonWriter ).GetMethod( methodName, flags ).MakeGenericMethod( nonNullableType );
+                writeAsyncMethod = typeof( JsonAsyncWriter ).GetMethod( methodName + "Async", flags )?.MakeGenericMethod( nonNullableType );
+
                 readMethod = null;
             }
             else
             {
                 writeMethod = typeof( JsonWriter ).GetMethod( nameof( JsonWriter.WriteValue ), flags, null, new Type[] { type }, null );
+                writeAsyncMethod = typeof( JsonAsyncWriter ).GetMethod( nameof( JsonAsyncWriter.WriteValueAsync ), flags, null, new Type[] { type }, null );
 
                 if ( writeMethod != null )
                 {
@@ -34,6 +39,7 @@ namespace Maverick.Json
             if ( writeMethod != null )
             {
                 m_write = (Action<JsonWriter, T>)writeMethod.CreateDelegate( typeof( Action<JsonWriter, T> ) );
+                m_writeAsync = (Func<JsonAsyncWriter, T, Task>)writeAsyncMethod?.CreateDelegate( typeof( Func<JsonAsyncWriter, T, Task> ) );
 
                 if ( readMethod != null )
                 {
@@ -57,6 +63,26 @@ namespace Maverick.Json
                 return true;
             }
 
+            return false;
+        }
+
+
+        public static Boolean TryWriteAsync( JsonAsyncWriter writer, T value, out Task task )
+        {
+            if ( m_writeAsync != null )
+            {
+                task = m_writeAsync( writer, value );
+                return true;
+            }
+
+            if ( m_write != null )
+            {
+                m_write( writer, value );
+                task = Task.CompletedTask;
+                return true;
+            }
+
+            task = null;
             return false;
         }
 
@@ -92,6 +118,8 @@ namespace Maverick.Json
 
 
         private static readonly Action<JsonWriter, T> m_write;
+        private static readonly Func<JsonAsyncWriter, T, Task> m_writeAsync;
+
         private static readonly Func<JsonReader, T> m_read;
     }
 }

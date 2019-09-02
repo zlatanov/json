@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Reflection;
+using System.Threading.Tasks;
+using Maverick.Json.Async;
 
 namespace Maverick.Json.Serialization
 {
@@ -144,6 +146,9 @@ namespace Maverick.Json.Serialization
 
 
         protected internal abstract void WriteValue( JsonWriter writer, TOwner owner );
+
+
+        protected internal abstract Task WriteValueAsync( JsonAsyncWriter writer, TOwner owner );
 
 
         internal abstract unsafe void ReadValue( JsonReader reader, ref TOwner owner, ref JsonPropertyValues<TOwner> propertyValues );

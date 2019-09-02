@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace Maverick.Json
 {
-    internal ref struct Enumerator<TCollection, TItem, TEnumerator>
+    internal struct Enumerator<TCollection, TItem, TEnumerator>
         where TEnumerator : struct
     {
         static Enumerator()

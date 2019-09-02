@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Threading.Tasks;
+using Maverick.Json.Async;
 
 namespace Maverick.Json.Serialization
 {
@@ -19,6 +20,14 @@ namespace Maverick.Json.Serialization
         {
             writer.WriteStartObject();
             writer.WriteEndObject();
+        }
+
+
+        public override Task WriteValueAsync( JsonAsyncWriter writer, Object value )
+        {
+            WriteValue( writer, value );
+
+            return Task.CompletedTask;
         }
 
 

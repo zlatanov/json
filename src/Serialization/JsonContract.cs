@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
+using Maverick.Json.Async;
 
 namespace Maverick.Json.Serialization
 {
@@ -23,6 +25,9 @@ namespace Maverick.Json.Serialization
 
 
         public abstract void WriteValue( JsonWriter writer, Object value );
+
+
+        public abstract Task WriteValueAsync( JsonAsyncWriter writer, Object value );
 
 
         public abstract Object ReadValue( JsonReader reader, Type objectType );

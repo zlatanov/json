@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
+using Maverick.Json.Async;
 
 namespace Maverick.Json.Serialization
 {
@@ -138,6 +140,9 @@ namespace Maverick.Json.Serialization
         public override void WriteValue( JsonWriter writer, Object value ) => WriteValueCore( writer, (T)value );
 
 
+        public override Task WriteValueAsync( JsonAsyncWriter writer, Object value ) => WriteValueCoreAsync( writer, (T)value );
+
+
         public override Object ReadValue( JsonReader reader, Type objectType ) => ReadValueCore( reader );
 
 
@@ -148,6 +153,42 @@ namespace Maverick.Json.Serialization
             foreach ( var property in Properties.SortedWritable )
             {
                 property.WriteValue( writer, value );
+            }
+
+            writer.WriteEndObject();
+        }
+
+
+        private Task WriteValueCoreAsync( JsonAsyncWriter writer, T value )
+        {
+            writer.WriteStartObject();
+
+            for ( var i = 0; i < Properties.SortedWritable.Length; ++i )
+            {
+                var property = Properties.SortedWritable[ i ];
+                var task = property.WriteValueAsync( writer, value );
+
+                if ( !task.IsCompleted )
+                {
+                    return ContinueWriteAsync( writer, value, task, i + 1 );
+                }
+            }
+
+            writer.WriteEndObject();
+
+            return Task.CompletedTask;
+        }
+
+
+        private async Task ContinueWriteAsync( JsonAsyncWriter writer, T value, Task task, Int32 startIndex )
+        {
+            await task;
+
+            for ( var i = startIndex; i < Properties.SortedWritable.Length; ++i )
+            {
+                var property = Properties.SortedWritable[ i ];
+
+                await property.WriteValueAsync( writer, value );
             }
 
             writer.WriteEndObject();
