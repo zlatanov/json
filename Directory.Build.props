@@ -17,8 +17,5 @@
         <!--Embedded Debug Symbols-->
         <DebugType Condition="$(Configuration) == Release">embedded</DebugType>
         <DebugSymbols>True</DebugSymbols>
-
-        <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)Maverick.Json.snk</AssemblyOriginatorKeyFile>
-        <SignAssembly>true</SignAssembly>
     </PropertyGroup>
 </Project>

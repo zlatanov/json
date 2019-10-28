@@ -159,8 +159,8 @@ namespace Maverick.Json
             TestLessThenOneNegative = -0.23345F,
             TestLessThenOneManyZeros = 0.000000000025F,
             TestLessThenOneManyZerosNegative = 0.0000000000789F,
-            TestMin = -3.402823E+38f, // We don't use the actual value becouse it's broken and adds extra symbols
-            TestMax = 3.402823E+38f, // We don't use the actual values becouse it's broken and adds extra symbols
+            TestMin = -3.402823E+38f, // We don't use the actual value because it's broken and adds extra symbols
+            TestMax = 3.402823E+38f, // We don't use the actual values because it's broken and adds extra symbols
             TestNullable = (Single?)908754.1234F,
             TestNull = default( Single? ),
             TestObj = (Object)87.45F,
@@ -178,8 +178,6 @@ namespace Maverick.Json
         {
             Test = 2342.5D,
             TestNegative = -12.2435D,
-            TestManyZeroes = 1534000000000000D,
-            TestManyZeroesNegative = -2240000000000000D,
             TestLessThenOne = 0.0045D,
             TestLessThenOneNegative = -0.00345D,
             TestLessThenOneManyZeros = 0.000000000781D,

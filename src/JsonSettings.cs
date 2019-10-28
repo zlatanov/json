@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using Maverick.Json.Converters;
 using Maverick.Json.Serialization;
 
 namespace Maverick.Json
@@ -17,6 +18,8 @@ namespace Maverick.Json
         {
             m_contractResolver = new JsonContractResolver();
             m_contractFactory = new Func<Type, JsonContract>( CreateObjectContract );
+
+            Converters.Add( new VersionConverter() );
         }
 
 

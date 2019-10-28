@@ -156,9 +156,9 @@ namespace Maverick.Json.Serialization
 
             for ( var i = 0; i < converters.Count; ++i )
             {
-                if ( converters[i].CanConvert( objectType ) )
+                if ( converters[ i ].CanConvert( objectType ) )
                 {
-                    return converters[i];
+                    return converters[ i ];
                 }
             }
 
