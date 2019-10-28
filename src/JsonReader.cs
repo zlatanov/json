@@ -36,6 +36,42 @@ namespace Maverick.Json
         public JsonSettings Settings { get; }
 
 
+        public SequencePosition Position => m_position;
+
+
+        public JsonReaderState GetState() => new JsonReaderState
+        {
+            Reader = this,
+            CurrentToken = Peek(),
+            Position = m_position,
+            Memory = m_memory,
+            Offset = m_offset,
+            ExpectComma = m_expectComma,
+            LineNumber = m_lineNumber,
+            Tokens = m_tokens.ToArray()
+        };
+
+
+        public void SetState( JsonReaderState state )
+        {
+            if ( state is null ) throw new ArgumentNullException( nameof( state ) );
+            if ( state.Reader != this ) throw new ArgumentException( "The provided state doesn't belong to the current instance." );
+
+            m_position = state.Position;
+            m_memory = state.Memory;
+            m_offset = state.Offset;
+            m_currentToken = state.CurrentToken;
+            m_expectComma = state.ExpectComma;
+            m_lineNumber = state.LineNumber;
+            m_tokens.Clear();
+
+            foreach ( var token in state.Tokens )
+            {
+                m_tokens.Push( token );
+            }
+        }
+
+
         public JsonToken Peek()
         {
             if ( m_currentToken == JsonToken.None )
@@ -134,9 +170,9 @@ namespace Maverick.Json
 
         public void ReadEndObject()
         {
-            if ( m_state.Count == 0 || m_state.Peek() != JsonToken.StartObject )
+            if ( m_tokens.Count == 0 || m_tokens.Peek() != JsonToken.StartObject )
             {
-                JsonSerializationException.ThrowInvalidState( JsonToken.EndObject, m_state.Count == 0 ? JsonToken.None : m_state.Peek() );
+                JsonSerializationException.ThrowInvalidState( JsonToken.EndObject, m_tokens.Count == 0 ? JsonToken.None : m_tokens.Peek() );
             }
 
             CheckToken( JsonToken.EndObject );
@@ -153,9 +189,9 @@ namespace Maverick.Json
 
         public void ReadEndArray()
         {
-            if ( m_state.Count == 0 || m_state.Peek() != JsonToken.StartArray )
+            if ( m_tokens.Count == 0 || m_tokens.Peek() != JsonToken.StartArray )
             {
-                JsonSerializationException.ThrowInvalidState( JsonToken.EndArray, m_state.Count == 0 ? JsonToken.None : m_state.Peek() );
+                JsonSerializationException.ThrowInvalidState( JsonToken.EndArray, m_tokens.Count == 0 ? JsonToken.None : m_tokens.Peek() );
             }
 
             CheckToken( JsonToken.EndArray );
@@ -429,7 +465,7 @@ namespace Maverick.Json
 
             resultChar = result[ 0 ];
 
-        Complete:
+            Complete:
             CompleteReadValueToken( byteCount + 1 );
 
             return resultChar;
@@ -1120,7 +1156,7 @@ namespace Maverick.Json
 
                     return token;
 
-                Continue:
+                    Continue:
                     ++m_offset;
                     continue;
                 }
@@ -1134,7 +1170,7 @@ namespace Maverick.Json
 
         private JsonToken PeekStringOrPropertyName()
         {
-            if ( m_state.Count > 0 && m_state.Peek() == JsonToken.StartObject )
+            if ( m_tokens.Count > 0 && m_tokens.Peek() == JsonToken.StartObject )
             {
                 return JsonToken.PropertyName;
             }
@@ -1162,9 +1198,9 @@ namespace Maverick.Json
 
         private void TryPopPropertyName()
         {
-            if ( m_state.Count > 0 && m_state.Peek() == JsonToken.PropertyName )
+            if ( m_tokens.Count > 0 && m_tokens.Peek() == JsonToken.PropertyName )
             {
-                m_state.Pop();
+                m_tokens.Pop();
             }
         }
 
@@ -1182,7 +1218,7 @@ namespace Maverick.Json
         private void CompleteReadStartToken( JsonToken token )
         {
             m_offset += 1;
-            m_state.Push( token );
+            m_tokens.Push( token );
 
             m_expectComma = false;
             m_currentToken = JsonToken.None;
@@ -1202,7 +1238,7 @@ namespace Maverick.Json
         private void CompleteReadEndToken()
         {
             m_offset += 1;
-            m_state.Pop();
+            m_tokens.Pop();
             TryPopPropertyName();
 
             m_expectComma = true;
@@ -1213,7 +1249,7 @@ namespace Maverick.Json
         private void CompleteReadPropertyName( Int32 bytesConsumed )
         {
             m_offset += bytesConsumed + 1;
-            m_state.Push( JsonToken.PropertyName );
+            m_tokens.Push( JsonToken.PropertyName );
 
             // Between the property name and the value there can only be white space
             // and exactly 1 symbol ':' serving as separator.
@@ -1711,7 +1747,7 @@ namespace Maverick.Json
         private JsonToken m_currentToken = JsonToken.None;
         private Boolean m_expectComma;
 
-        private readonly Stack<JsonToken> m_state = new Stack<JsonToken>();
+        private readonly Stack<JsonToken> m_tokens = new Stack<JsonToken>();
         private JsonNameTable m_nameTable;
 
         private Int32 m_lineNumber;
