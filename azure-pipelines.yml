@@ -38,12 +38,9 @@ steps:
 - script: | 
     dotnet build --configuration $(Configuration)
     dotnet test tests --configuration $(Configuration) --logger trx
-    dotnet publish src --configuration $(Configuration) --output $BUILD_ARTIFACTSTAGINGDIRECTORY
 
 - task: PublishTestResults@2
   condition: succeededOrFailed()
   inputs:
     testRunner: VSTest
     testResultsFiles: '**/*.trx'
-
-- task: PublishBuildArtifacts@1
