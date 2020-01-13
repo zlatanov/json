@@ -26,11 +26,14 @@ variables:
   Configuration: 'Release'
 
 steps:
-- task: DotNetCoreInstaller@0
+- task: UseDotNet@2
+  displayName: 'Install Net Core'
   inputs:
-    version: '3.0.100'
+    useGlobalJson: true
+    packageType: sdk
 
 - task: DotNetCoreCLI@1
+  displayName: 'Restore NuGet Packages'
   inputs:
     command: restore
     projects: '**/*.csproj'
