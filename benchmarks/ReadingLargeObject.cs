@@ -39,6 +39,15 @@ namespace Maverick.Json.Benchmarks
         }
 
 
+        [Benchmark]
+        [BenchmarkCategory( "Read" )]
+        public void ReadMicrosoft()
+        {
+            System.Text.Json.JsonSerializer.Deserialize<List<LargeObject>>( ObjectsJsonBytes );
+        }
+
+
+
         Char[] Newtonsoft.Json.IArrayPool<Char>.Rent( Int32 minimumLength ) => ArrayPool<Char>.Shared.Rent( minimumLength );
 
 
