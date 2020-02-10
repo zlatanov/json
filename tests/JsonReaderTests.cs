@@ -206,6 +206,44 @@ namespace Maverick.Json
         }
 
 
+        [Fact]
+        public void SetStateRestoreThenSkipInArray()
+        {
+            var reader = CreateReader( JsonConvert.Serialize( new
+            {
+                Name = "123",
+                Items = new[]
+                {
+                    new
+                    {
+                        Type = "321",
+                        Number = 3
+                    }
+                }
+            } ) );
+
+            reader.ReadStartObject();
+
+            Assert.Equal( "Name", reader.ReadPropertyName() );
+            Assert.Equal( "123", reader.ReadString() );
+            Assert.Equal( "Items", reader.ReadPropertyName() );
+
+            reader.ReadStartArray();
+
+            var state = reader.GetState();
+            reader.ReadStartObject();
+
+            Assert.Equal( "Type", reader.ReadPropertyName() );
+            Assert.Equal( "321", reader.ReadString() );
+
+            reader.SetState( state );
+            reader.Skip();
+
+            reader.ReadEndArray();
+            reader.ReadEndObject();
+        }
+
+
         private static JsonReader CreateReader( String json )
         {
             var bytes = Encoding.UTF8.GetBytes( json );
