@@ -1,19 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFrameworks>netstandard2.0;netcoreapp3.0</TargetFrameworks>
-        <Description>Provides standards-based support for the serialization of JSON.</Description>
-        <Version>1.1</Version>
+        <Description>Provides standards-based UTF-8 support for the serialization of JSON.</Description>
+        <Version>2.0</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
-        <PackageVersion>1.1.0</PackageVersion>
+        <PackageVersion>2.0.0</PackageVersion>
         <PackageProjectUrl>https://github.com/zlatanov/json</PackageProjectUrl>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageTags>json</PackageTags>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
+
+        <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
     </PropertyGroup>
     
     <ItemGroup Condition="$(TargetFramework) == 'netstandard2.0'">
-        <PackageReference Include="System.Buffers" Version="4.5.0" />
         <PackageReference Include="System.Memory" Version="4.5.3" />
         <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
         <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.7.0" />
