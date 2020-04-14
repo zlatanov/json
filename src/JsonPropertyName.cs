@@ -28,7 +28,7 @@ namespace Maverick.Json
         internal String Value { get; }
 
 
-        internal ReadOnlySpan<Byte> GetBytes( JsonNamingStrategy strategy )
+        public ReadOnlySpan<Byte> GetBytes( JsonNamingStrategy strategy )
         {
             ref var bytes = ref m_bytes[ (Byte)strategy ];
 
@@ -39,7 +39,7 @@ namespace Maverick.Json
         }
 
 
-        internal ReadOnlyMemory<Byte> GetBytesNoQuotes( JsonNamingStrategy strategy )
+        public ReadOnlyMemory<Byte> GetBytesNoQuotes( JsonNamingStrategy strategy )
         {
             ref var bytes = ref m_bytes[ (Byte)strategy ];
 
