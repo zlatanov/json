@@ -7,15 +7,17 @@
         <LangVersion>latest</LangVersion>
         <Features>strict</Features>
 
-        <GenerateDocumentationFile Condition="$(Configuration) == Release">true</GenerateDocumentationFile>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
 
-        <!--Deterministic Build (tm)-->
         <Deterministic>true</Deterministic>
-        <PathMap>$(MSBuildThisFileDirectory)=Z:\Projects\Json\</PathMap>
-        
-        <!--Embedded Debug Symbols-->
-        <DebugType Condition="$(Configuration) == Release">embedded</DebugType>
         <DebugSymbols>True</DebugSymbols>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="$(Configuration) == 'Release'">
+        <DebugType>embedded</DebugType>
+        <PathMap>$(MSBuildThisFileDirectory)=Z:\Projects\Json\</PathMap>
+        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
     </PropertyGroup>
 </Project>
