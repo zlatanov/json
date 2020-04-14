@@ -926,6 +926,14 @@ namespace Maverick.Json
                             WriteUTFByte( (Byte)' ' );
                         }
                     }
+                    else if ( currentState == InternalState.Start && Format == JsonFormat.WhiteSpace )
+                    {
+                        WriteUTFByte( (Byte)' ' );
+                    }
+                }
+                else if ( currentState != InternalState.Start && Format == JsonFormat.WhiteSpace )
+                {
+                    WriteUTFByte( (Byte)' ' );
                 }
 
                 if ( Format == JsonFormat.Indented )

@@ -44,10 +44,10 @@ namespace Maverick.Json
         public void WhiteSpaceFormat()
         {
             var json = JsonConvert.Serialize( new NullablePropertyObject(), JsonFormat.WhiteSpace );
-            Assert.Equal( "{\"Value\": null}", json );
+            Assert.Equal( "{ \"Value\": null }", json );
 
             json = JsonConvert.Serialize( new[] { 1, 2, 3 }, JsonFormat.WhiteSpace );
-            Assert.Equal( "[1, 2, 3]", json );
+            Assert.Equal( "[ 1, 2, 3 ]", json );
         }
 
 
