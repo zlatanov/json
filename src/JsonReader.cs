@@ -201,7 +201,7 @@ namespace Maverick.Json
 
             if ( byteCount != 0 )
             {
-                if ( m_nameTable == null )
+                if ( m_nameTable is null )
                 {
                     m_nameTable = new JsonNameTable();
                 }
@@ -229,7 +229,7 @@ namespace Maverick.Json
         {
             var propertyName = m_nameTable.Find( buffer );
 
-            if ( propertyName == null )
+            if ( propertyName is null )
             {
                 propertyName = JsonPropertyName.RestoreCase( UnescapeString( buffer.Span ), Settings.NamingStrategy );
                 m_nameTable.Add( buffer, propertyName );
@@ -243,7 +243,7 @@ namespace Maverick.Json
         {
             var propertyName = m_nameTable.Find( buffer, length );
 
-            if ( propertyName == null )
+            if ( propertyName is null )
             {
                 var span = new Span<Byte>( buffer, length );
 
@@ -1051,7 +1051,7 @@ namespace Maverick.Json
 
         public void Populate( Object target )
         {
-            if ( target == null )
+            if ( target is null )
             {
                 throw new ArgumentNullException( nameof( target ) );
             }

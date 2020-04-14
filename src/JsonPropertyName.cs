@@ -7,33 +7,50 @@ namespace Maverick.Json
 {
     public sealed class JsonPropertyName : IEquatable<JsonPropertyName>
     {
-        private JsonPropertyName( String name )
+        public static JsonPropertyName GetOrCreate( String propertyName )
         {
-            for ( var i = 0; i < m_data.Length; ++i )
-            {
-                Initialize( ref m_data[ i ], (JsonNamingStrategy)i, name );
-            }
+            if ( propertyName is null )
+                throw new ArgumentNullException( nameof( propertyName ) );
+
+            return s_registeredProperties.GetOrAdd( propertyName, s_factory );
         }
 
 
-        internal String Value => m_data[ 0 ].Value;
+        private JsonPropertyName( String propertyName )
+        {
+            if ( propertyName is null )
+                throw new ArgumentNullException( nameof( propertyName ) );
+
+            Value = String.Intern( propertyName );
+        }
 
 
-        internal String GetString( JsonNamingStrategy strategy ) => m_data[ (Byte)strategy ].Value;
+        internal String Value { get; }
 
 
-        internal ReadOnlySpan<Byte> GetBytes( JsonNamingStrategy strategy ) => m_data[ (Byte)strategy ].ValueBytes;
+        internal ReadOnlySpan<Byte> GetBytes( JsonNamingStrategy strategy )
+        {
+            ref var bytes = ref m_bytes[ (Byte)strategy ];
+
+            if ( bytes is null )
+                bytes = Convert( Value, strategy );
+
+            return bytes;
+        }
 
 
         internal ReadOnlyMemory<Byte> GetBytesNoQuotes( JsonNamingStrategy strategy )
         {
-            var bytes = m_data[ (Byte)strategy ].ValueBytes;
+            ref var bytes = ref m_bytes[ (Byte)strategy ];
+
+            if ( bytes is null )
+                bytes = Convert( Value, strategy );
 
             return new ReadOnlyMemory<Byte>( bytes, 1, bytes.Length - 3 );
         }
 
 
-        public override String ToString() => m_data[ 0 ].Value;
+        public override String ToString() => Value;
 
 
         public override Int32 GetHashCode() => StringComparer.OrdinalIgnoreCase.GetHashCode( Value );
@@ -53,17 +70,6 @@ namespace Maverick.Json
         public Boolean Equals( JsonPropertyName other ) => StringComparer.OrdinalIgnoreCase.Equals( Value, other?.Value );
 
 
-        public static implicit operator JsonPropertyName( String name )
-        {
-            if ( name == null )
-            {
-                return null;
-            }
-
-            return s_registeredProperties.GetOrAdd( name, s_factory );
-        }
-
-
         public static Boolean operator ==( JsonPropertyName left, JsonPropertyName right )
             => StringComparer.OrdinalIgnoreCase.Equals( left?.Value, right?.Value );
 
@@ -75,36 +81,23 @@ namespace Maverick.Json
         private static JsonPropertyName Create( String name ) => new JsonPropertyName( name );
 
 
-        private static void Initialize( ref Data data, JsonNamingStrategy strategy, String name )
+        private static Byte[] Convert( String propertyName, JsonNamingStrategy strategy )
         {
-            switch ( strategy )
+            propertyName = strategy switch
             {
-                case JsonNamingStrategy.Unspecified:
-                    data.Value = name;
-                    break;
+                JsonNamingStrategy.CamelCase => ToCamelCase( propertyName ),
+                JsonNamingStrategy.SnakeCase => ToSnakeCase( propertyName ),
+                _ => propertyName
+            };
 
-                case JsonNamingStrategy.CamelCase:
-                    data.Value = ToCamelCase( name );
-                    break;
+            using var buffer = new JsonBufferWriter( 256 );
+            new JsonWriter( buffer ).WriteValue( propertyName );
 
-                case JsonNamingStrategy.SnakeCase:
-                    data.Value = ToSnakeCase( name );
-                    break;
+            // Append the separator
+            buffer.GetSpan()[ 0 ] = (Byte)':';
+            buffer.Advance( 1 );
 
-                default:
-                    throw new NotImplementedException( $"Naming strategy {strategy} is not implemented." );
-            }
-
-            using ( var buffer = new JsonBufferWriter( 256 ) )
-            {
-                new JsonWriter( buffer ).WriteValue( data.Value );
-
-                // Append the separator
-                buffer.GetSpan()[ 0 ] = (Byte)':';
-                buffer.Advance( 1 );
-
-                data.ValueBytes = buffer.ToArray();
-            }
+            return buffer.ToArray();
         }
 
 
@@ -149,7 +142,7 @@ namespace Maverick.Json
 
             return new String( chars );
 
-            Char ToLower( Char c )
+            static Char ToLower( Char c )
             {
                 return Char.ToLower( c, CultureInfo.InvariantCulture );
             }
@@ -287,18 +280,11 @@ namespace Maverick.Json
         }
 
 
-        private readonly Data[] m_data = new Data[ 3 ];
+        private readonly Byte[][] m_bytes = new Byte[ 3 ][];
 
 
         private static readonly ConcurrentDictionary<String, JsonPropertyName> s_registeredProperties = new ConcurrentDictionary<String, JsonPropertyName>( StringComparer.Ordinal );
         private static readonly Func<String, JsonPropertyName> s_factory = Create;
-
-
-        private struct Data
-        {
-            public String Value;
-            public Byte[] ValueBytes;
-        }
 
 
         private enum SnakeCaseState

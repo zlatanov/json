@@ -70,7 +70,7 @@ namespace Maverick.Json.Serialization
 
                 while ( item != null )
                 {
-                    if ( item.Value.Name.Value == propertyName )
+                    if ( item.Value.Name == propertyName )
                     {
                         properties.Remove( item );
                         m_list.Remove( item.Value );

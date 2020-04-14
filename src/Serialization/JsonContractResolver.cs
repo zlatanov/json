@@ -56,6 +56,9 @@ namespace Maverick.Json.Serialization
                 if ( JsonArrayContract.TryCreate( objectType, out var arrayContract ) )
                     return arrayContract;
 
+                if ( JsonDynamicContract.TryCreate( objectType, out var dynamicContract ) )
+                    return dynamicContract;
+
                 if ( JsonDictionaryContract.TryCreate( objectType, out var dictionaryContract ) )
                     return dictionaryContract;
 

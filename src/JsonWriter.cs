@@ -89,15 +89,32 @@ namespace Maverick.Json
         }
 
 
-        public void WritePropertyName( JsonPropertyName name )
+        public void WritePropertyName( JsonPropertyName propertyName )
         {
-            if ( name is null )
-            {
-                throw new ArgumentNullException( nameof( name ) );
-            }
+            if ( propertyName is null )
+                throw new ArgumentNullException( nameof( propertyName ) );
 
             WriteStarted( InternalState.PropertyName );
-            WriteUTFBytes( name.GetBytes( Settings.NamingStrategy ) );
+            WriteUTFBytes( propertyName.GetBytes( Settings.NamingStrategy ) );
+        }
+
+
+        public void WritePropertyName( String propertyName )
+        {
+            if ( propertyName is null )
+                throw new ArgumentNullException( nameof( propertyName ) );
+
+            WriteStarted( InternalState.PropertyName );
+            WriteStringEscaped( propertyName.AsSpan(), withQuotes: true );
+            WriteUTFByte( (Byte)':' );
+        }
+
+
+        public void WritePropertyName( ReadOnlySpan<Char> propertyName )
+        {
+            WriteStarted( InternalState.PropertyName );
+            WriteStringEscaped( propertyName, withQuotes: true );
+            WriteUTFByte( (Byte)':' );
         }
 
 

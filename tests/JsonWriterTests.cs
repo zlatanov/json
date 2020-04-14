@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Dynamic;
 using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography;
@@ -87,7 +89,7 @@ namespace Maverick.Json
         [Fact]
         public void ByteArrayShouldNotInfiniteLoop()
         {
-            var data = new Byte[10000];
+            var data = new Byte[ 10000 ];
 
             using ( var rng = new RNGCryptoServiceProvider() )
             {
@@ -116,10 +118,45 @@ namespace Maverick.Json
         [Fact]
         public void SpanShouldNotBeSerialized()
         {
-            var memory = new Memory<Byte>( new Byte[1] { 1 } );
+            var memory = new Memory<Byte>( new Byte[ 1 ] { 1 } );
             var json = JsonConvert.Serialize( memory );
 
             Assert.Equal( "{\"Length\":1,\"IsEmpty\":false}", json );
+        }
+
+
+        [Fact]
+        public void StringDictionaryShouldIgnoreNamingStrategy()
+        {
+            var json = JsonConvert.Serialize( new Dictionary<String, Int32>
+            {
+                [ "John Doe" ] = 33
+            }, JsonFormat.None, settings: new JsonSettings { NamingStrategy = JsonNamingStrategy.SnakeCase } );
+
+            Assert.Equal( "{\"John Doe\":33}", json );
+        }
+
+
+        [Fact]
+        public void EnumDictionaryShouldAdhereToNamingStrategy()
+        {
+            var json = JsonConvert.Serialize( new Dictionary<JsonNamingStrategy, Int32>
+            {
+                [ JsonNamingStrategy.SnakeCase ] = 33
+            }, settings: new JsonSettings { NamingStrategy = JsonNamingStrategy.SnakeCase } );
+
+            Assert.Equal( "{\"snake_case\":33}", json );
+        }
+
+
+        [Fact]
+        public void DynamicObjectsShouldAdhereToNamingStrategy()
+        {
+            dynamic obj = new ExpandoObject();
+            obj.LastName = "X";
+
+            var json = JsonConvert.Serialize( obj, settings: new JsonSettings { NamingStrategy = JsonNamingStrategy.SnakeCase } );
+            Assert.Equal( "{\"last_name\":\"X\"}", json );
         }
 
 

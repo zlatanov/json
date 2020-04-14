@@ -2,10 +2,10 @@
     <PropertyGroup>
         <TargetFrameworks>netstandard2.0;netcoreapp3.0</TargetFrameworks>
         <Description>Provides standards-based UTF-8 support for the serialization of JSON.</Description>
-        <Version>2.0</Version>
+        <Version>3.0</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
-        <PackageVersion>2.0.0</PackageVersion>
+        <PackageVersion>3.0.0</PackageVersion>
         <PackageProjectUrl>https://github.com/zlatanov/json</PackageProjectUrl>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageTags>json</PackageTags>
@@ -15,9 +15,9 @@
     </PropertyGroup>
     
     <ItemGroup Condition="$(TargetFramework) == 'netstandard2.0'">
-        <PackageReference Include="System.Memory" Version="4.5.3" />
+        <PackageReference Include="System.Memory" Version="4.5.4" />
         <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
-        <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.7.0" />
+        <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.7.1" />
     </ItemGroup>
 
     <ItemGroup>

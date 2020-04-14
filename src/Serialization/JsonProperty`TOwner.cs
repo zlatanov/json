@@ -35,7 +35,7 @@ namespace Maverick.Json.Serialization
                 SerializeNulls = parent.Settings.SerializeNulls;
             }
 
-            Name = mappedName;
+            Name = JsonPropertyName.GetOrCreate( mappedName );
             PropertyType = ReflectionHelpers.GetFieldOrPropertyType( member );
             NonNullablePropertyType = Nullable.GetUnderlyingType( PropertyType ) ?? PropertyType;
             Converter = ReflectionHelpers.GetAttribute<JsonConverterAttribute>( member )?.CreateInstance( NonNullablePropertyType );

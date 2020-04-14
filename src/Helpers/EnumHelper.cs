@@ -10,10 +10,10 @@ namespace Maverick.Json
         {
             foreach ( T value in Enum.GetValues( typeof( T ) ) )
             {
-                var propertyName = (JsonPropertyName)value.ToString();
+                var propertyName = JsonPropertyName.GetOrCreate( value.ToString() );
 
                 s_propertyNames.Add( value, propertyName );
-                s_propertyNamesReversed.Add( propertyName, value );
+                s_propertyNamesReversed.Add( propertyName.Value, value );
             }
         }
 
@@ -29,7 +29,7 @@ namespace Maverick.Json
         }
 
 
-        public static T FromPropertyName( JsonPropertyName name )
+        public static T FromPropertyName( String name )
         {
             if ( s_propertyNamesReversed.TryGetValue( name, out var value ) )
             {
@@ -77,6 +77,6 @@ namespace Maverick.Json
 
 
         private static readonly Dictionary<T, JsonPropertyName> s_propertyNames = new Dictionary<T, JsonPropertyName>();
-        private static readonly Dictionary<JsonPropertyName, T> s_propertyNamesReversed = new Dictionary<JsonPropertyName, T>();
+        private static readonly Dictionary<String, T> s_propertyNamesReversed = new Dictionary<String, T>( StringComparer.OrdinalIgnoreCase );
     }
 }
