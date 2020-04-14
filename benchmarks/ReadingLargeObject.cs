@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 
@@ -43,9 +44,8 @@ namespace Maverick.Json.Benchmarks
         [BenchmarkCategory( "Read" )]
         public void ReadMicrosoft()
         {
-            System.Text.Json.JsonSerializer.Deserialize<List<LargeObject>>( ObjectsJsonBytes );
+            System.Text.Json.JsonSerializer.Deserialize<List<LargeObject>>(ObjectsJsonBytes);
         }
-
 
 
         Char[] Newtonsoft.Json.IArrayPool<Char>.Rent( Int32 minimumLength ) => ArrayPool<Char>.Shared.Rent( minimumLength );

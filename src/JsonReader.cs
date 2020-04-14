@@ -30,13 +30,17 @@ namespace Maverick.Json
         public JsonSettings Settings { get; }
 
 
-        public SequencePosition Position => m_position;
+        public ReadOnlySequence<Byte> Sequence => m_sequence;
+
+
+        public SequencePosition Position => m_sequence.GetPosition( m_offset, origin: m_position );
 
 
         public Int32 Depth => m_stack.Depth;
 
 
-        public JsonReaderState GetState() => new JsonReaderState( this, m_memory, m_offset, m_currentToken, m_previousToken, m_expectComma, m_stack );
+        public JsonReaderState GetState()
+            => new JsonReaderState( this, m_position, m_memory, m_offset, m_currentToken, m_previousToken, m_expectComma, m_stack );
 
 
         public void SetState( in JsonReaderState state )
@@ -145,7 +149,7 @@ namespace Maverick.Json
         public void ReadStartObject()
         {
             CheckToken( JsonToken.StartObject );
-          
+
             m_offset += 1;
             m_stack.PushStartObject();
 
@@ -454,7 +458,7 @@ namespace Maverick.Json
 
             resultChar = result[ 0 ];
 
-            Complete:
+        Complete:
             CompleteReadValueToken( byteCount + 1 );
 
             return resultChar;
@@ -1136,7 +1140,7 @@ namespace Maverick.Json
 
                     return token;
 
-                    Continue:
+                Continue:
                     ++m_offset;
                     continue;
                 }

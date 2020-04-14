@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace Maverick.Json
 {
@@ -7,16 +8,18 @@ namespace Maverick.Json
     /// </summary>
     public readonly struct JsonReaderState
     {
+        [MethodImpl( MethodImplOptions.AggressiveInlining )]
         internal JsonReaderState( JsonReader reader,
+                                  SequencePosition position,
                                   ReadOnlyMemory<Byte> memory,
                                   Int32 offset,
                                   JsonToken currentToken,
                                   JsonToken previousToken,
                                   Boolean expectComma,
-                                  in JsonReaderStack stack )
+                                  JsonReaderStack stack )
         {
             Reader = reader;
-            Position = reader.Position;
+            Position = position;
             Memory = memory;
             Offset = offset;
             CurrentToken = currentToken;

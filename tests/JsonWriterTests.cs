@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography;
 using Maverick.Json.TestObjects;
@@ -68,7 +69,7 @@ namespace Maverick.Json
         [InlineData( "1000000", "1000000" )]
         public void WriteDecimal( String number, String expectedOutput )
         {
-            var json = JsonConvert.Serialize( Decimal.Parse( number ) );
+            var json = JsonConvert.Serialize( Decimal.Parse( number, CultureInfo.InvariantCulture ) );
 
             Assert.Equal( expectedOutput, json );
         }

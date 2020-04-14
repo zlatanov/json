@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 
@@ -40,10 +41,23 @@ namespace Maverick.Json.Benchmarks
         [BenchmarkCategory( "Write" )]
         public void WriteMaverick()
         {
-            using ( var buffer = new JsonStreamWriter( Stream.Null ) )
+            using var buffer = new JsonStreamWriter( Stream.Null );
+
+            new JsonWriter( buffer ).WriteValue( Objects );
+        }
+
+
+        [Benchmark]
+        [BenchmarkCategory( "Write" )]
+        public void WriteMicrosoft()
+        {
+            using var buffer = new JsonStreamWriter( Stream.Null );
+            using var writer = new Utf8JsonWriter( buffer );
+            
+            JsonSerializer.Serialize( writer, Objects, new JsonSerializerOptions
             {
-                new JsonWriter( buffer ).WriteValue( Objects );
-            }
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            } );
         }
 
 

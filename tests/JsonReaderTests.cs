@@ -244,6 +244,16 @@ namespace Maverick.Json
         }
 
 
+        [Fact]
+        public void ReaderShouldAdvanceSequenceReader()
+        {
+            var reader = CreateReader( "\"A String\"" );
+
+            Assert.Equal( "A String", reader.ReadString() );
+            Assert.Equal( 0, reader.Sequence.Slice( reader.Position ).Length );
+        }
+
+
         private static JsonReader CreateReader( String json )
         {
             var bytes = Encoding.UTF8.GetBytes( json );
