@@ -6,9 +6,7 @@ namespace Maverick.Json.Serialization
 {
     public unsafe ref struct JsonPropertyValues<TOwner>
     {
-        public JsonPropertyValues( JsonObjectContract<TOwner> contract,
-                                   Byte* memory,
-                                   Boolean* present )
+        public JsonPropertyValues( JsonObjectContract<TOwner> contract, Byte* memory, Byte* present )
         {
             m_referenceCount = contract.Properties.ReferenceCount;
             m_contract = contract;
@@ -19,19 +17,11 @@ namespace Maverick.Json.Serialization
 
 
         [MethodImpl( MethodImplOptions.AggressiveInlining )]
-        public Boolean HasValue( JsonProperty<TOwner> property )
-        {
-            if ( property.Index >= m_contract.Properties.Count )
-            {
-                ThrowInvalidProperty( property );
-            }
-
-            return *( m_present + property.Index );
-        }
+        public readonly Boolean HasValue( JsonProperty<TOwner> property ) => m_present[ property.Index ] == 1;
 
 
         [MethodImpl( MethodImplOptions.AggressiveInlining )]
-        public TProperty GetValue<TProperty>( JsonProperty<TOwner, TProperty> property )
+        public readonly TProperty GetValue<TProperty>( JsonProperty<TOwner, TProperty> property )
         {
             if ( !HasValue( property ) )
             {
@@ -49,7 +39,7 @@ namespace Maverick.Json.Serialization
         [MethodImpl( MethodImplOptions.AggressiveInlining )]
         internal void SetValue<TProperty>( JsonProperty<TOwner, TProperty> property, TProperty value )
         {
-            m_present[ property.Index ] = true;
+            m_present[ property.Index ] = 1;
 
             if ( Traits<TProperty>.IsValueType )
             {
@@ -59,6 +49,13 @@ namespace Maverick.Json.Serialization
             {
                 m_references[ property.ReferenceIndex ] = value;
             }
+        }
+
+
+        [MethodImpl( MethodImplOptions.AggressiveInlining )]
+        internal void MarkAsPresent<TProperty>( JsonProperty<TOwner, TProperty> property )
+        {
+            m_present[ property.Index ] = 2;
         }
 
 
@@ -74,32 +71,26 @@ namespace Maverick.Json.Serialization
         }
 
 
-        internal void CheckRequiredProperties()
+        internal readonly void CheckRequiredProperties()
         {
             if ( m_contract.Properties.Required.Length > 0 )
             {
                 foreach ( var property in m_contract.Properties.Required )
                 {
-                    if ( !m_present[ property.Index ] )
+                    if ( m_present[ property.Index ] == 0 )
                     {
-                        throw new JsonSerializationException( $"Missing value for rqeuired property {property.UnderlyingName} in {m_contract.UnderlyingType}." );
+                        throw new JsonSerializationException( $"Missing value for required property {property.UnderlyingName} in {m_contract.UnderlyingType}." );
                     }
                 }
             }
         }
 
 
-        [MethodImpl( MethodImplOptions.AggressiveInlining )]
-        private static void ThrowInvalidProperty( JsonProperty<TOwner> property )
-        {
-        }
-
-
         private readonly JsonObjectContract<TOwner> m_contract;
         private readonly Byte* m_memory;
-        private readonly Boolean* m_present;
+        private readonly Byte* m_present;
 
         private Object[] m_references;
-        private Int32 m_referenceCount;
+        private readonly Int32 m_referenceCount;
     }
 }

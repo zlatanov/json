@@ -65,7 +65,7 @@ namespace Maverick.Json.Serialization
 
             var target = (T)targetObject;
             var memory = stackalloc Byte[ Properties.ValueMemorySize ];
-            var present = stackalloc Boolean[ Properties.Count ];
+            var present = stackalloc Byte[ Properties.Count ];
             var propertyValues = new JsonPropertyValues<T>( this, memory, present );
 
             try
@@ -162,7 +162,7 @@ namespace Maverick.Json.Serialization
             }
 
             var memory = stackalloc Byte[ Properties.ValueMemorySize ];
-            var present = stackalloc Boolean[ Properties.Count ];
+            var present = stackalloc Byte[ Properties.Count ];
             var propertyValues = new JsonPropertyValues<T>( this, memory, present );
 
             var target = default( T );

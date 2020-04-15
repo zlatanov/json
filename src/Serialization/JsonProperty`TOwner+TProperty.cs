@@ -1,26 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq.Expressions;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 
 namespace Maverick.Json.Serialization
 {
     public class JsonProperty<TOwner, TProperty> : JsonProperty<TOwner>
     {
+        private delegate TProperty Getter( TOwner target );
+        private delegate void Setter( ref TOwner target, TProperty value );
+
+        private static readonly Boolean IsValueType = typeof( TProperty ).IsValueType;
+
+
         public JsonProperty( JsonObjectContract<TOwner> parent, MemberInfo member ) : base( parent, member )
         {
             m_setter = CreateSetter( member );
             m_getter = ReflectionHelpers.CreateGetter<TOwner, TProperty, Getter>( member );
 
-            if ( m_getter != null )
+            if ( m_getter is object )
             {
                 ShouldSerialize = CreateShouldSerialize( member );
             }
 
-            CanSetValue = m_setter != null;
-            CanGetValue = m_getter != null;
+            CanSetValue = m_setter is object;
+            CanGetValue = m_getter is object;
 
             Debug.Assert( PropertyType == typeof( TProperty ) );
         }
@@ -43,24 +49,24 @@ namespace Maverick.Json.Serialization
 
         protected internal override void WriteValue( JsonWriter writer, TOwner owner )
         {
-            if ( ShouldSerialize != null && !ShouldSerialize( owner ) )
+            if ( ShouldSerialize is object && !ShouldSerialize( owner ) )
             {
                 return;
             }
 
             var value = m_getter( owner );
 
-            if ( value == null && !SerializeNulls )
+            if ( value is null && !SerializeNulls )
             {
                 return;
             }
 
             writer.WritePropertyName( Name );
 
-            if ( Converter != null )
+            if ( Converter is object )
             {
                 // Try to avoid boxing if possible
-                if ( s_isValueType && Converter is JsonConverter<TProperty> valueConverter )
+                if ( IsValueType && Converter is JsonConverter<TProperty> valueConverter )
                 {
                     valueConverter.Write( writer, value );
                 }
@@ -80,10 +86,10 @@ namespace Maverick.Json.Serialization
         {
             TProperty value;
 
-            if ( Converter != null )
+            if ( Converter is object )
             {
                 // Try to avoid boxing if possible
-                if ( s_isValueType && Converter is JsonConverter<TProperty> valueConverter )
+                if ( IsValueType && Converter is JsonConverter<TProperty> valueConverter )
                 {
                     value = valueConverter.Read( reader, NonNullablePropertyType );
                 }
@@ -95,13 +101,15 @@ namespace Maverick.Json.Serialization
             else
             {
                 // If what we are trying to read is reference type with already created 
-                if ( m_setter == null && target != null && Traits<TProperty>.IsPopulatable )
+                if ( m_setter is null && target is object && Traits<TProperty>.IsPopulatable )
                 {
                     var currentValue = m_getter( target );
 
-                    if ( currentValue != null )
+                    if ( currentValue is object )
                     {
                         reader.Populate( currentValue );
+                        propertyValues.MarkAsPresent( this );
+
                         return;
                     }
                 }
@@ -109,7 +117,15 @@ namespace Maverick.Json.Serialization
                 value = reader.ReadValue<TProperty>();
             }
 
-            propertyValues.SetValue( this, value );
+            if ( target is object && m_setter is object )
+            {
+                m_setter( ref target, value );
+                propertyValues.MarkAsPresent( this );
+            }
+            else
+            {
+                propertyValues.SetValue( this, value );
+            }
         }
 
 
@@ -127,35 +143,41 @@ namespace Maverick.Json.Serialization
 
         private static Setter CreateSetter( MemberInfo member )
         {
-            // We cannot set init only (read only) fields
-            if ( member is FieldInfo field && field.IsInitOnly )
+            switch ( member )
             {
-                return null;
-            }
-
-            // We need to get the ref TOwner type which is ByRef and the only way to do this is using reflection
-            var target = Expression.Parameter( typeof( Setter ).GetMethod( "Invoke" ).GetParameters()[ 0 ].ParameterType, "target" );
-            var setter = default( Expression );
-
-            if ( member is PropertyInfo property )
-            {
-                if ( property.SetMethod != null )
-                {
-                    setter = Expression.Property( target, property.SetMethod );
-                }
-                else
-                {
+                case FieldInfo f when f.IsInitOnly:
+                case PropertyInfo p when p.GetSetMethod( nonPublic: true ) is null:
                     return null;
-                }
             }
+
+            var dynamicMethod = new DynamicMethod( name: "Set" + member.Name,
+                                                   returnType: null,
+                                                   parameterTypes: new Type[] { typeof( TOwner ).MakeByRefType(), typeof( TProperty ) },
+                                                   owner: typeof( ReflectionHelpers ),
+                                                   skipVisibility: true );
+
+            dynamicMethod.DefineParameter( 0, ParameterAttributes.None, "target" );
+            dynamicMethod.DefineParameter( 1, ParameterAttributes.None, "value" );
+
+            var il = dynamicMethod.GetILGenerator();
+            il.Emit( OpCodes.Ldarg_0 );
+
+            if ( typeof( TOwner ).IsClass )
+                il.Emit( OpCodes.Ldind_Ref );
+
+            il.Emit( OpCodes.Ldarg_1 );
+
+            if ( member is FieldInfo field ) il.Emit( OpCodes.Stfld, field );
             else
             {
-                setter = Expression.Field( target, (FieldInfo)member );
+                var method = ( (PropertyInfo)member ).GetSetMethod( nonPublic: true );
+
+                il.Emit( method.IsFinal || !method.IsVirtual ? OpCodes.Call : OpCodes.Callvirt, method );
             }
 
-            var value = Expression.Parameter( typeof( TProperty ), "value" );
+            il.Emit( OpCodes.Ret );
 
-            return Expression.Lambda<Setter>( Expression.Assign( setter, value ), target, value ).Compile();
+            return (Setter)dynamicMethod.CreateDelegate( typeof( Setter ) );
         }
 
 
@@ -164,7 +186,7 @@ namespace Maverick.Json.Serialization
             var flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
             var method = typeof( TOwner ).GetMethod( "ShouldSerialize" + member.Name, flags, null, Type.EmptyTypes, null );
 
-            if ( method != null && method.ReturnType == typeof( Boolean ) )
+            if ( method is object && method.ReturnType == typeof( Boolean ) )
             {
                 return (Predicate<TOwner>)method.CreateDelegate( typeof( Predicate<TOwner> ) );
             }
@@ -175,10 +197,5 @@ namespace Maverick.Json.Serialization
 
         private readonly Getter m_getter;
         private readonly Setter m_setter;
-
-        private static readonly Boolean s_isValueType = typeof( TProperty ).IsValueType;
-
-        private delegate TProperty Getter( TOwner target );
-        private delegate void Setter( ref TOwner target, TProperty value );
     }
 }
