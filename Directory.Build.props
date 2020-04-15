@@ -4,7 +4,7 @@
 
         <Authors>Ivan Zlatanov</Authors>
         <NeutralLanguage>en-US</NeutralLanguage>
-        <LangVersion>latest</LangVersion>
+        <LangVersion>8.0</LangVersion>
         <Features>strict</Features>
 
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -15,8 +15,6 @@
 
     <PropertyGroup Condition="$(Configuration) == 'Release'">
         <DebugType>embedded</DebugType>
-        <PathMap>$(MSBuildThisFileDirectory)=Z:\Projects\Json\</PathMap>
-        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
     </PropertyGroup>

@@ -20,7 +20,7 @@ dotnet_style_qualification_for_method = false : suggestion
 dotnet_style_qualification_for_event = false : suggestion
 
 # Prefer Int32, Int16, etc instead of int, short.
-dotnet_style_predefined_type_for_locals_parameters_members = false : warning
+dotnet_style_predefined_type_for_locals_parameters_members = false : none
 dotnet_style_predefined_type_for_member_access = false : suggestion
 
 # Prefer explicit tuple names instead of the generic (Item1, Item2) etc.
