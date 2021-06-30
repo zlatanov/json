@@ -20,13 +20,13 @@ namespace Maverick.Json.Serialization
             m_setter = CreateSetter( member );
             m_getter = ReflectionHelpers.CreateGetter<TOwner, TProperty, Getter>( member );
 
-            if ( m_getter is object )
+            if ( m_getter is not null )
             {
                 ShouldSerialize = CreateShouldSerialize( member );
             }
 
-            CanSetValue = m_setter is object;
-            CanGetValue = m_getter is object;
+            CanSetValue = m_setter is not null;
+            CanGetValue = m_getter is not null;
 
             Debug.Assert( PropertyType == typeof( TProperty ) );
         }
@@ -49,7 +49,7 @@ namespace Maverick.Json.Serialization
 
         protected internal override void WriteValue( JsonWriter writer, TOwner owner )
         {
-            if ( ShouldSerialize is object && !ShouldSerialize( owner ) )
+            if ( ShouldSerialize is not null && !ShouldSerialize( owner ) )
             {
                 return;
             }
@@ -63,7 +63,7 @@ namespace Maverick.Json.Serialization
 
             writer.WritePropertyName( Name );
 
-            if ( Converter is object )
+            if ( Converter is not null )
             {
                 // Try to avoid boxing if possible
                 if ( IsValueType && Converter is JsonConverter<TProperty> valueConverter )
@@ -105,7 +105,7 @@ namespace Maverick.Json.Serialization
                 {
                     var currentValue = m_getter( target );
 
-                    if ( currentValue is object )
+                    if ( currentValue is not null )
                     {
                         reader.Populate( currentValue );
                         propertyValues.MarkAsPresent( this );
@@ -117,7 +117,7 @@ namespace Maverick.Json.Serialization
                 value = reader.ReadValue<TProperty>();
             }
 
-            if ( targetCreated && m_setter is object )
+            if ( targetCreated && m_setter is not null )
             {
                 m_setter( ref target, value );
                 propertyValues.MarkAsPresent( this );
@@ -186,7 +186,7 @@ namespace Maverick.Json.Serialization
             var flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
             var method = typeof( TOwner ).GetMethod( "ShouldSerialize" + member.Name, flags, null, Type.EmptyTypes, null );
 
-            if ( method is object && method.ReturnType == typeof( Boolean ) )
+            if ( method is not null && method.ReturnType == typeof( Boolean ) )
             {
                 return (Predicate<TOwner>)method.CreateDelegate( typeof( Predicate<TOwner> ) );
             }
