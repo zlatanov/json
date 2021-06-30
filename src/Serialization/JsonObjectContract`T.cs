@@ -85,7 +85,7 @@ namespace Maverick.Json.Serialization
                         continue;
                     }
 
-                    property.ReadValue( reader, ref target, ref propertyValues );
+                    property.ReadValue( reader, ref target, true, ref propertyValues );
                 }
 
                 reader.ReadEndObject();
@@ -193,7 +193,7 @@ namespace Maverick.Json.Serialization
                         targetCreated = true;
                     }
 
-                    property.ReadValue( reader, ref target, ref propertyValues );
+                    property.ReadValue( reader, ref target, targetCreated, ref propertyValues );
                 }
 
                 reader.ReadEndObject();

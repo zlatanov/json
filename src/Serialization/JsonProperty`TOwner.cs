@@ -146,7 +146,7 @@ namespace Maverick.Json.Serialization
         protected internal abstract void WriteValue( JsonWriter writer, TOwner owner );
 
 
-        internal abstract unsafe void ReadValue( JsonReader reader, ref TOwner owner, ref JsonPropertyValues<TOwner> propertyValues );
+        internal abstract unsafe void ReadValue( JsonReader reader, ref TOwner owner, bool ownerCreated, ref JsonPropertyValues<TOwner> propertyValues );
 
 
         internal abstract void SetValue( ref TOwner target, ref JsonPropertyValues<TOwner> propertyValues );

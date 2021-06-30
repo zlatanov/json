@@ -121,6 +121,16 @@ namespace Maverick.Json
 
 
         [Fact]
+        public void ReadValueTuple()
+        {
+            var x = JsonConvert.Deserialize<(string Name, int Age)>( "{ \"Item1\": \"Ivan\", \"Item2\": 31 }" );
+
+            Assert.Equal( "Ivan", x.Name );
+            Assert.Equal( 31, x.Age );
+        }
+
+
+        [Fact]
         public void JsonWithMissingCommasShouldFail()
         {
             var ex = Assert.Throws<JsonSerializationException>( () => JsonConvert.Deserialize<Dictionary<String, Object>>( "{ \"1\": 1 \"2\": 2 }" ) );

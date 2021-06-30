@@ -82,7 +82,7 @@ namespace Maverick.Json.Serialization
         }
 
 
-        internal override unsafe void ReadValue( JsonReader reader, ref TOwner target, ref JsonPropertyValues<TOwner> propertyValues )
+        internal override unsafe void ReadValue( JsonReader reader, ref TOwner target, bool targetCreated, ref JsonPropertyValues<TOwner> propertyValues )
         {
             TProperty value;
 
@@ -101,7 +101,7 @@ namespace Maverick.Json.Serialization
             else
             {
                 // If what we are trying to read is reference type with already created 
-                if ( m_setter is null && target is object && Traits<TProperty>.IsPopulatable )
+                if ( m_setter is null && targetCreated && Traits<TProperty>.IsPopulatable )
                 {
                     var currentValue = m_getter( target );
 
@@ -117,7 +117,7 @@ namespace Maverick.Json.Serialization
                 value = reader.ReadValue<TProperty>();
             }
 
-            if ( target is object && m_setter is object )
+            if ( targetCreated && m_setter is object )
             {
                 m_setter( ref target, value );
                 propertyValues.MarkAsPresent( this );
