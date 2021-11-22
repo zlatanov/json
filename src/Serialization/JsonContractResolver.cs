@@ -107,8 +107,6 @@ namespace Maverick.Json.Serialization
         }
 
 
-        ref struct Test { }
-
         protected internal virtual JsonObjectContract<TOwner> CreateObjectContract<TOwner>( JsonSettings settings )
         {
             var contract = new JsonObjectContract<TOwner>( settings );
