@@ -1028,7 +1028,7 @@ namespace Maverick.Json
         {
             if ( Peek() == JsonToken.Null )
             {
-                if ( valueType.IsClass || Nullable.GetUnderlyingType( valueType ) != null )
+                if ( !valueType.IsValueType || Nullable.GetUnderlyingType( valueType ) != null )
                 {
                     CompleteReadNull();
 
