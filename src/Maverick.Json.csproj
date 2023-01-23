@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFrameworks>netstandard2.0;netcoreapp5.0</TargetFrameworks>
+        <TargetFrameworks>netstandard2.0;net7.0</TargetFrameworks>
         <Description>Provides standards-based UTF-8 support for the serialization of JSON.</Description>
         <Version>4.0.2</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

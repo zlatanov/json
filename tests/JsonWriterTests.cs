@@ -91,10 +91,7 @@ namespace Maverick.Json
         {
             var data = new Byte[ 10000 ];
 
-            using ( var rng = new RNGCryptoServiceProvider() )
-            {
-                rng.GetBytes( data );
-            }
+            RandomNumberGenerator.Fill( data );
 
             var json = JsonConvert.Serialize( data );
             var base64 = Convert.ToBase64String( data );
