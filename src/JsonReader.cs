@@ -1222,11 +1222,9 @@ namespace Maverick.Json
         }
 
 
-        private Int32 ReadEscapedStringSegmentByteCount( ReadOnlySpan<Byte> buffer, ref Int32 escapeByteCount, out Boolean needMoreData )
+        private Int32 ReadEscapedStringSegmentByteCount( ReadOnlySpan<Byte> buffer, ref bool escaped, ref Int32 escapeByteCount, out Boolean needMoreData )
         {
             needMoreData = true;
-
-            var escaped = false;
             var index = 0;
 
             for ( ; index < buffer.Length; ++index )
@@ -1269,7 +1267,7 @@ namespace Maverick.Json
 
             while ( index >= 0 )
             {
-                // Check if the escaped
+                // Check if escaped
                 if ( index == 0 || buffer[ index - 1 ] != (Byte)'\\' )
                 {
                     needMoreData = false;
@@ -1298,6 +1296,47 @@ namespace Maverick.Json
         }
 
 
+        private Int32 ReadStringSegmentContinuationByteCount( ReadOnlySpan<Byte> buffer, byte previousSegmentLastByte, out bool needMoreData )
+        {
+            var index = buffer.IndexOf( (Byte)'"' );
+
+            while ( index >= 0 )
+            {
+                // Check if escaped
+                if ( index == 0 )
+                {
+                    if ( previousSegmentLastByte != (Byte)'\\' )
+                    {
+                        needMoreData = false;
+                        return 0;
+                    }
+                }
+                else if ( buffer[ index - 1 ] != (Byte)'\\' )
+                {
+                    needMoreData = false;
+                    return index;
+                }
+
+                if ( index + 1 < buffer.Length )
+                {
+                    var nextIndex = buffer.Slice( index + 1 ).IndexOf( (Byte)'"' );
+
+                    if ( nextIndex >= 0 )
+                    {
+                        index += nextIndex + 1;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            needMoreData = true;
+            return buffer.Length;
+        }
+
+
         /// <summary>
         /// Searches for '"' token and counts how many bytes there are.
         /// </summary>
@@ -1315,6 +1354,7 @@ namespace Maverick.Json
 
                 continuous = false;
                 var position = m_sequence.GetPosition( count, m_position );
+                var previousSegmentLastByte = m_memory.Span[ m_memory.Span.Length - 1 ];
 
                 while ( needMoreData )
                 {
@@ -1323,8 +1363,13 @@ namespace Maverick.Json
                         JsonSerializationException.ThrowUnexpectedEnd();
                     }
 
-                    var currentCount = ReadStringSegmentByteCount( memory.Span, out needMoreData );
+                    var currentCount = ReadStringSegmentContinuationByteCount( memory.Span, previousSegmentLastByte, out needMoreData );
                     position = m_sequence.GetPosition( currentCount, position );
+
+                    if ( needMoreData )
+                    {
+                        previousSegmentLastByte = memory.Span[ memory.Span.Length - 1 ];
+                    }
 
                     count += currentCount;
                 }
@@ -1342,7 +1387,8 @@ namespace Maverick.Json
         private Int32 ReadEscapedStringByteCount( Int32 maxSize, out Int32 escapeByteCount, out Boolean continuous )
         {
             escapeByteCount = 0;
-            var count = ReadEscapedStringSegmentByteCount( m_memory.Span.Slice( m_offset ), ref escapeByteCount, out var needMoreData );
+            var escaped = false;
+            var count = ReadEscapedStringSegmentByteCount( m_memory.Span.Slice( m_offset ), ref escaped, ref escapeByteCount, out var needMoreData );
 
             if ( !needMoreData )
             {
@@ -1362,7 +1408,7 @@ namespace Maverick.Json
                         JsonSerializationException.ThrowUnexpectedEnd();
                     }
 
-                    var currentCount = ReadEscapedStringSegmentByteCount( memory.Span, ref escapeByteCount, out needMoreData );
+                    var currentCount = ReadEscapedStringSegmentByteCount( memory.Span, ref escaped, ref escapeByteCount, out needMoreData );
                     position = m_sequence.GetPosition( currentCount, position );
 
                     count += currentCount;

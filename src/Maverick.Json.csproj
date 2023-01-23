@@ -2,10 +2,10 @@
     <PropertyGroup>
         <TargetFrameworks>netstandard2.0;netcoreapp5.0</TargetFrameworks>
         <Description>Provides standards-based UTF-8 support for the serialization of JSON.</Description>
-        <Version>4.0.1</Version>
+        <Version>4.0.2</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
-        <PackageVersion>4.0.1</PackageVersion>
+        <PackageVersion>4.0.2</PackageVersion>
         <PackageProjectUrl>https://github.com/zlatanov/json</PackageProjectUrl>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageTags>json</PackageTags>
