@@ -183,6 +183,15 @@ namespace Maverick.Json
 
 
         [Fact]
+        public void ReadExponential()
+        {
+            var value = JsonConvert.Deserialize<double>( "3E-7" );
+
+            Assert.Equal( 3E-7, value );
+        }
+
+
+        [Fact]
         public void Skip()
         {
             var json = JsonConvert.Serialize( new

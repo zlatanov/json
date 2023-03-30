@@ -157,6 +157,15 @@ namespace Maverick.Json
         }
 
 
+        [Fact]
+        public void WriteExponential()
+        {
+            var json = JsonConvert.Serialize( 3E-7 );
+
+            Assert.Equal( "3E-07", json );
+        }
+
+
         private sealed class CircularObject
         {
             public CircularObject() => Parent = this;

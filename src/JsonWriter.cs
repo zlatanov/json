@@ -331,7 +331,7 @@ namespace Maverick.Json
                 var sizeHint = 20;
 
             Retry:
-                if ( !DoubleFormatter.TryFormat( value, m_output.GetSpan( sizeHint ), out var bytesWritten ) )
+                if ( !Utf8Formatter.TryFormat( value, m_output.GetSpan( sizeHint ), out var bytesWritten ) )
                 {
                     sizeHint *= 2;
 
@@ -372,9 +372,9 @@ namespace Maverick.Json
             else
             {
                 var sizeHint = 20;
-
+                
             Retry:
-                if ( !DoubleFormatter.TryFormat( value, m_output.GetSpan( sizeHint ), out var bytesWritten ) )
+                if ( !Utf8Formatter.TryFormat( value, m_output.GetSpan( sizeHint ), out var bytesWritten ) )
                 {
                     sizeHint *= 2;
 
