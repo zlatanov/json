@@ -4,6 +4,9 @@ namespace Maverick.Json
 {
     public abstract class JsonConverter
     {
+        public virtual bool HandleNull => false;
+
+
         public abstract Boolean CanConvert( Type type );
 
 
