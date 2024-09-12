@@ -971,8 +971,24 @@ namespace Maverick.Json
 
         private T ReadValue<T>( Boolean ignoreConverter )
         {
+            JsonContract contract = null;
+
             if ( Peek() == JsonToken.Null )
             {
+                if ( !ignoreConverter && !PrimitiveFormatter<T>.CanRead && !Traits<T>.IsNullable )
+                {
+                    // If the value has a converter that supports reading nulls then we must use it.
+                    contract = Settings.ResolveContract( typeof( T ) );
+
+                    if ( contract is JsonConverterContract<T> { Converter.HandleNull: true } converterContract )
+                    {
+                        var result = ( (IJsonContract<T>)converterContract ).ReadValue( this, typeof( T ) );
+                        CompleteReadNull();
+
+                        return result;
+                    }
+                }
+
                 if ( Traits<T>.IsReferenceTypeOrNullable )
                 {
                     CompleteReadNull();
@@ -988,8 +1004,11 @@ namespace Maverick.Json
                 return value;
             }
 
-            var objectType = ignoreConverter ? JsonIgnoreConverter.FromType( Traits<T>.NonNullableType ) : Traits<T>.NonNullableType;
-            var contract = Settings.ResolveContract( objectType );
+            if ( contract is null )
+            {
+                var objectType = ignoreConverter ? JsonIgnoreConverter.FromType( Traits<T>.NonNullableType ) : Traits<T>.NonNullableType;
+                contract = Settings.ResolveContract( objectType );
+            }
 
             return ReadValue<T>( contract );
         }
@@ -1008,7 +1027,7 @@ namespace Maverick.Json
 
         internal T ReadValueInternal<T>( JsonContract contract )
         {
-            if ( Peek() == JsonToken.Null )
+            if ( Peek() == JsonToken.Null && contract is not IJsonConverterContract { Converter.HandleNull: true } )
             {
                 if ( Traits<T>.IsReferenceTypeOrNullable )
                 {
@@ -1026,23 +1045,43 @@ namespace Maverick.Json
 
         public Object ReadValue( Type valueType )
         {
+            JsonContract contract = null;
+
             if ( Peek() == JsonToken.Null )
             {
-                if ( !valueType.IsValueType || Nullable.GetUnderlyingType( valueType ) != null )
+                if ( Nullable.GetUnderlyingType( valueType ) != null )
                 {
                     CompleteReadNull();
+                    return null;
+                }
 
+                // If the value has a converter that supports reading nulls then we must use it.
+                contract = Settings.ResolveContract( valueType );
+
+                if ( contract is IJsonConverterContract { Converter.HandleNull: true } )
+                {
+                    var result = contract.ReadValue( this, valueType );
+                    CompleteReadNull();
+
+                    return result;
+                }
+
+                if ( !valueType.IsValueType )
+                {
+                    CompleteReadNull();
                     return null;
                 }
 
                 throw new JsonSerializationException( $"Unexpected null when trying to read {valueType}." );
             }
 
-            valueType = Nullable.GetUnderlyingType( valueType ) ?? valueType;
+            if ( contract is null )
+            {
+                valueType = Nullable.GetUnderlyingType( valueType ) ?? valueType;
+                contract = Settings.ResolveContract( valueType );
+            }
 
-            return Settings
-                .ResolveContract( valueType )
-                .ReadValue( this, valueType );
+            return contract.ReadValue( this, valueType );
         }
 
 

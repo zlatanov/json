@@ -2,7 +2,12 @@
 
 namespace Maverick.Json.Serialization
 {
-    internal sealed class JsonConverterContract<T> : JsonContract, IJsonContract<T>, IJsonPopulateFeature
+    internal interface IJsonConverterContract
+    {
+        JsonConverter Converter { get; }
+    }
+
+    internal sealed class JsonConverterContract<T> : JsonContract, IJsonContract<T>, IJsonPopulateFeature, IJsonConverterContract
     {
         public JsonConverterContract( JsonConverter converter, JsonContract nonConverterContract ) : base( typeof( T ) )
         {
@@ -10,6 +15,9 @@ namespace Maverick.Json.Serialization
             m_typedConverter = converter as JsonConverter<T>;
             m_nonConverterContract = nonConverterContract;
         }
+
+
+        public JsonConverter Converter => m_converter;
 
 
         void IJsonContract<T>.WriteValue( JsonWriter writer, T value )

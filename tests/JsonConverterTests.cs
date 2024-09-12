@@ -62,7 +62,52 @@ namespace Maverick.Json
             Assert.True( obj.UsedConverter, "Object serialize converter not called." );
             Assert.True( deserializedObj.UsedConverter, "Object deserialize converter not called." );
         }
-        
+
+
+        [Fact]
+        public void ShouldReadNullValue()
+        {
+            var value = JsonConvert.Deserialize<Optional<int>>( "null" );
+
+            Assert.True( value.IsPresent );
+            Assert.False( value.HasValue );
+
+            value = JsonConvert.Deserialize<Optional<int>>( "1" );
+
+            Assert.True( value.IsPresent );
+            Assert.True( value.HasValue );
+            Assert.Equal( 1, value.Value );
+        }
+
+        [Fact]
+        public void ShouldReadNullValueNonGeneric()
+        {
+            var value = (Optional<int>)JsonConvert.Deserialize( "null", typeof( Optional<int> ) );
+
+            Assert.True( value.IsPresent );
+            Assert.False( value.HasValue );
+
+            value = (Optional<int>)JsonConvert.Deserialize( "1", typeof( Optional<int> ) );
+
+            Assert.True( value.IsPresent );
+            Assert.True( value.HasValue );
+            Assert.Equal( 1, value.Value );
+        }
+
+        [Fact]
+        public void ShouldReadNullValueInCollection()
+        {
+            var values = (Optional<int>[])JsonConvert.Deserialize( "[null, null]", typeof( Optional<int>[] ) );
+
+            Assert.Equal( 2, values.Length );
+
+            foreach ( var value in values )
+            {
+                Assert.True( value.IsPresent );
+                Assert.False( value.HasValue );
+            }
+        }
+
 
         [JsonConverter( typeof( TestObject<,>.Converter ) )]
         private sealed class TestObject<T1, T2>
@@ -156,6 +201,44 @@ namespace Maverick.Json
 
 
             public Boolean UsedConverter { get; set; }
+        }
+
+
+        [JsonConverter( typeof( OptionalConverter<> ) )]
+        readonly struct Optional<T>
+        {
+            public Optional( T value, Boolean hasValue )
+            {
+                Value = value;
+                HasValue = hasValue && value is not null;
+                IsPresent = true;
+            }
+
+            public T Value { get; }
+
+            public bool IsPresent { get; }
+
+            public bool HasValue { get; }
+        }
+
+        private sealed class OptionalConverter<T> : JsonConverter<Optional<T>>
+        {
+            public override Boolean HandleNull => true;
+
+            public override Optional<T> Read( JsonReader reader, Type objectType )
+            {
+                if ( reader.Peek() == JsonToken.Null )
+                {
+                    return new Optional<T>( default, false );
+                }
+
+                return new Optional<T>( reader.ReadValue<T>(), true );
+            }
+
+            public override void Write( JsonWriter writer, Optional<T> value )
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }
